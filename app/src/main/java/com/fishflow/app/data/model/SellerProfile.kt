@@ -1,6 +1,9 @@
-﻿// SellerProfile.kt
-// Developer: Fakhri
-//
-// Data class untuk ringkasan profil penjual di dashboard.
-// Field: userId, namaKapal (nullable), stokAktifKg (Double), pesananBaru (Int), omset (Double)
-// Ini bukan tabel Supabase terpisah, tapi hasil agregasi dari tabel catches, products, orders.
+﻿package com.fishflow.app.data.model
+
+data class SellerProfile(
+    val userId: String,
+    val namaKapal: String? = null,
+    val stokAktifKg: Double = 0.0,
+    val pesananBaru: Int = 0,
+    val omzet: Double = 0.0
+)
