@@ -1,7 +1,17 @@
-﻿// BudgetEstimate.kt
+﻿package com.fishflow.app.data.model
+
+// BudgetEstimate.kt
 // Developer: Fatih
 //
 // Data class untuk hasil kalkulasi estimasi anggaran wisata.
 // Field: selectedActivities (List<Activity>), totalBiaya (Double),
-//        catatanBelumTersedia (List<String> — nama aktivitas yang biayanya belum pasti)
+//        catatanBelumTersedia (List<String> - nama aktivitas yang biayanya belum pasti)
 // Ini bukan tabel Supabase, tapi hasil kalkulasi lokal di app.
+data class BudgetEstimate(
+    val selectedActivities: List<Activity>,
+    val totalBiaya: Double,
+    val catatanBelumTersedia: List<String>
+) {
+    val hasUnavailableCost: Boolean
+        get() = catatanBelumTersedia.isNotEmpty()
+}
