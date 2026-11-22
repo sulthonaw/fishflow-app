@@ -1,7 +1,10 @@
-﻿// FishCatch.kt
-// Developer: Fakhri
-//
-// Data class untuk catatan tangkapan ikan.
-// Field: id, sellerId, jenisIkan, beratKg (Double), tanggalTangkap, fotoUrl (nullable)
-// Mapping ke tabel "catches" di Supabase.
-// Satu penjual bisa punya banyak catatan tangkapan.
+﻿package com.fishflow.app.data.model
+
+data class FishCatch(
+    val id: String = "",
+    val sellerId: String = "",
+    val jenisIkan: String = "",
+    val beratKg: Double = 0.0,
+    val tanggalTangkap: String = "",
+    val fotoUrl: String? = null,
+)
