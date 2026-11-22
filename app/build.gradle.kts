@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "uth.praktikum.fishflowapp"
+    namespace = "com.fishflow.app"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "uth.praktikum.fishflowapp"
+        applicationId = "com.fishflow.app"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
