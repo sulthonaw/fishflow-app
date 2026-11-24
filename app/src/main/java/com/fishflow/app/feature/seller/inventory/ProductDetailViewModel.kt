@@ -4,6 +4,7 @@ package com.fishflow.app.feature.seller.inventory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fishflow.app.data.model.FishProduct
+import com.fishflow.app.data.model.ProductStatus
 import com.fishflow.app.data.repository.ProductRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,7 +72,11 @@ class ProductDetailViewModel(
 
         if (_uiState.value.isUpdatingStatus) return
 
-        val newStatus = !currentProduct.status
+        val newStatus = if (currentProduct.status == ProductStatus.AKTIF) {
+            ProductStatus.NONAKTIF
+        } else {
+            ProductStatus.AKTIF
+        }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
@@ -82,7 +87,7 @@ class ProductDetailViewModel(
             try {
                 repository.updateStatus(
                     productId = currentProduct.id,
-                    isActive = newStatus
+                    isActive = (newStatus == ProductStatus.AKTIF)
                 )
 
                 _uiState.value = _uiState.value.copy(

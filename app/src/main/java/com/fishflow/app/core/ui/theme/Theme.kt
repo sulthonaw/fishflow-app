@@ -1,4 +1,17 @@
 ﻿// Theme.kt
 // Developer: Octavia
 // FishFlowTheme composable wrapper. Diterapkan di MainActivity oleh Sulthon.
-// Octavia yang definisikan warna, typography, dan shapes di sini.
+//
+// Saat ini baru mengatur warna dan hanya mode terang.
+package com.fishflow.app.core.ui.theme
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+
+@Composable
+fun FishFlowTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = FishFlowLightColors,
+        content = content
+    )
+}
