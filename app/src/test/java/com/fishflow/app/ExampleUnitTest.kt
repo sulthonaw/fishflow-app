@@ -1,4 +1,4 @@
-package uth.praktikum.fishflowapp
+package com.fishflow.app
 
 import org.junit.Test
 
