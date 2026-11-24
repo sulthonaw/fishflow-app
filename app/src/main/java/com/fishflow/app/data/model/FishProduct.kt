@@ -1,12 +1,21 @@
-﻿// FishProduct.kt
-// Developer: Octavia
-//
-// Koneksi: Octavia memegang fitur katalog produk ikan (Fungsi 4). Model FishProduct
-// adalah entitas utama yang dikonsumsi langsung oleh katalog wisatawan, filter wilayah,
-// dan detail produk ikan miliknya.
-//
-// Data class untuk produk ikan yang dijual.
-// Field: id, sellerId, namaIkan, hargaPerKg (Double), stokTersedia (Double),
-//        stokTeralokasi (Double), status (aktif/nonaktif), wilayah (String)
-// Mapping ke tabel "products" di Supabase.
-// Stok riil yang bisa dipesan = stokTersedia - stokTeralokasi
+﻿
+package com.fishflow.app.data.model
+
+data class FishProduct(
+    val id: String = "",
+    val sellerId: String = "",
+    val namaIkan: String = "",
+    val hargaPerKg: Double = 0.0,
+    val stokTersedia: Double = 0.0,
+    val stokTeralokasi: Double = 0.0,
+    val status: Boolean = true,
+    val wilayah: String = ""
+) {
+    // Menghitung stok yang masih dapat dipesan
+    val stokRiil: Double
+        get() = (stokTersedia - stokTeralokasi).coerceAtLeast(0.0)
+
+    // Menghitung apakah produk masih tersedia
+    val isAvailable: Boolean
+        get() = status && stokRiil > 0.0
+}
