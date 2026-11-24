@@ -26,13 +26,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,11 +41,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.core.ui.components.OrderDesignTokens
+import com.fishflow.app.core.ui.theme.FishFlowTheme
 import com.fishflow.app.data.model.Order
 import com.fishflow.app.feature.seller.orders.SellerOrderDetailScreen
 import com.fishflow.app.feature.seller.orders.SellerOrderListScreen
 import com.fishflow.app.feature.seller.orders.SellerOrderUiState
 import com.fishflow.app.feature.tourist.cart.CartScreen
+import com.fishflow.app.feature.tourist.catalog.CatalogDemoHost
 import com.fishflow.app.feature.tourist.checkout.CheckoutScreen
 import com.fishflow.app.feature.tourist.destination.TourismDemoHost
 import com.fishflow.app.feature.tourist.order_history.OrderHistoryScreen
@@ -68,7 +70,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme {
+            FishFlowTheme {
                 FishFlowSulthonShowcase()
             }
         }
@@ -78,6 +80,29 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun FishFlowSulthonShowcase() {
     var route by remember { mutableStateOf<LauncherRoute>(LauncherRoute.Menu) }
+    // Terpisah dari route karena harus bertahan saat rotasi (state filter katalog).
+    var isCatalogOpen by rememberSaveable { mutableStateOf(false) }
+
+    if (isCatalogOpen) {
+        CatalogDemoHost(
+            onExit = { isCatalogOpen = false },
+            onProceedToCheckout = {
+                isCatalogOpen = false
+                route = LauncherRoute.Checkout
+            },
+            onNavItemClick = { tab ->
+                if (tab != "Katalog") {
+                    isCatalogOpen = false
+                    route = when (tab) {
+                        "Rencana" -> LauncherRoute.TourismDemo
+                        "Pesanan" -> LauncherRoute.OrderHistory
+                        else -> LauncherRoute.Menu
+                    }
+                }
+            }
+        )
+        return
+    }
 
     BackHandler(enabled = route != LauncherRoute.Menu) {
         route = when (route) {
@@ -154,6 +179,13 @@ private fun FishFlowSulthonShowcase() {
                     contentColor = OrderDesignTokens.TextPrimary
                 ) {
                     route = LauncherRoute.TourismDemo
+                }
+                LauncherButton(
+                    label = "Katalog Ikan (F4)",
+                    containerColor = OrderDesignTokens.SurfaceContainer,
+                    contentColor = OrderDesignTokens.TextPrimary
+                ) {
+                    isCatalogOpen = true
                 }
             }
         }
