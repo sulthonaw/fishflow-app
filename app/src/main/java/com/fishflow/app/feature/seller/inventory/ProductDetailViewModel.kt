@@ -25,7 +25,6 @@ class ProductDetailViewModel(
     private val _uiState = MutableStateFlow(ProductDetailUiState())
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
-    // Mengambil detail produk berdasarkan ID
     fun loadProduct(productId: String) {
         if (productId.isBlank()) {
             _uiState.value = _uiState.value.copy(
@@ -65,7 +64,6 @@ class ProductDetailViewModel(
         }
     }
 
-    // Mengubah status produk aktif/nonaktif
     fun toggleStatus() {
         val currentProduct = _uiState.value.product ?: return
 
@@ -101,7 +99,6 @@ class ProductDetailViewModel(
         }
     }
 
-    // Menghapus pesan error dari UI
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
