@@ -1,7 +1,12 @@
-﻿// GetCurrentUserUseCase.kt
-// Developer: Fakhri
-//
-// Koneksi: Dipakai di MainActivity (cek sudah login atau belum)
-// dan di dashboard untuk tampilkan nama user. Fakhri handle auth + model User.
-//
-// Ambil data user yang sedang login. Return null jika belum login.
+﻿package com.fishflow.app.domain.usecase.auth
+
+import com.fishflow.app.data.model.User
+import com.fishflow.app.data.repository.AuthRepository
+
+class GetCurrentUserUseCase(
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(): User? {
+        return authRepository.getCurrentUser()
+    }
+}

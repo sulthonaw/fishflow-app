@@ -1,5 +1,4 @@
-﻿
-package com.fishflow.app.data.model
+﻿package com.fishflow.app.data.model
 
 data class FishProduct(
     val id: String = "",
@@ -9,13 +8,14 @@ data class FishProduct(
     val stokTersedia: Double = 0.0,
     val stokTeralokasi: Double = 0.0,
     val status: Boolean = true,
-    val wilayah: String = ""
+    val wilayah: String = "",
+    val fotoUrl: String? = null,
+    val createdAt: String = ""
 ) {
-    // Menghitung stok yang masih dapat dipesan
+
     val stokRiil: Double
         get() = (stokTersedia - stokTeralokasi).coerceAtLeast(0.0)
 
-    // Menghitung apakah produk masih tersedia
     val isAvailable: Boolean
         get() = status && stokRiil > 0.0
 }

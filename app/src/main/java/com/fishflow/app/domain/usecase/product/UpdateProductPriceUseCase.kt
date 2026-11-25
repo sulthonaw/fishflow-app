@@ -1,8 +1,24 @@
-﻿// UpdateProductPriceUseCase.kt
-// Developer: Fakhri
-//
-// Use case untuk update harga jual ikan.
-// - Terima: productId, hargaBaru
-// - Validasi: harga > 0
-// - Panggil ProductRepository.updatePrice()
-// - Return Result<Unit>
+﻿package com.fishflow.app.domain.usecase.product
+
+import com.fishflow.app.data.repository.ProductRepository
+
+class UpdateProductPriceUseCase(
+    private val productRepository: ProductRepository
+) {
+    suspend operator fun invoke(
+        productId: String,
+        hargaBaru: Double
+    ): Result<Unit> {
+
+        if (hargaBaru <= 0) {
+            return Result.failure(
+                IllegalArgumentException("Harga harus lebih dari 0.")
+            )
+        }
+
+        return productRepository.updatePrice(
+            productId = productId,
+            hargaBaru = hargaBaru
+        )
+    }
+}
