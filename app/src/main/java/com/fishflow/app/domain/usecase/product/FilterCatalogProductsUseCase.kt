@@ -8,7 +8,8 @@
 // 1. Status aktif dan stok tersedia > 0
 // 2. Wilayah sama dengan pilihan (jika wilayah dipilih)
 // 3. Kategori sama dengan pilihan (jika kategori dipilih)
-// 4. Nama ikan mengandung kata kunci (jika diisi)
+// 4. Nama ikan atau wilayah mengandung kata kunci (jika diisi). Kata "Pantai" di depan
+//    diabaikan untuk wilayah, jadi "Pantai Serang" cocok dengan wilayah "Serang".
 package com.fishflow.app.domain.usecase.product
 
 import com.fishflow.app.data.model.FishCategory
@@ -33,7 +34,17 @@ class FilterCatalogProductsUseCase {
             product.isAvailable &&
                 (wilayah.isEmpty() || product.wilayah.equals(wilayah, ignoreCase = true)) &&
                 (filter.kategori == null || product.kategori == filter.kategori) &&
-                (keyword.isEmpty() || product.namaIkan.contains(keyword, ignoreCase = true))
+                (keyword.isEmpty() || product.matchesKeyword(keyword))
         }
+    }
+
+    private fun FishProduct.matchesKeyword(keyword: String): Boolean {
+        val regionKeyword = keyword.replaceFirst(BEACH_PREFIX, "").trim()
+        return namaIkan.contains(keyword, ignoreCase = true) ||
+            (regionKeyword.isNotEmpty() && wilayah.contains(regionKeyword, ignoreCase = true))
+    }
+
+    private companion object {
+        val BEACH_PREFIX = Regex("^pantai(\\s+|$)", RegexOption.IGNORE_CASE)
     }
 }

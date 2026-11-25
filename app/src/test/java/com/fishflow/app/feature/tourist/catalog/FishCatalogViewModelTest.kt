@@ -102,6 +102,50 @@ class FishCatalogViewModelTest {
     }
 
     @Test
+    fun `dibuka dari beranda memakai kata kunci dan menghapus filter lama`() = runTest(dispatcher) {
+        val viewModel = createViewModel()
+        viewModel.load()
+        viewModel.onRegionFilter("Jolosutro")
+        viewModel.onCategoryFilter(FishCategory.UDANG_LOBSTER)
+        advanceUntilIdle()
+
+        viewModel.onOpenWithQuery("kakap")
+        viewModel.load()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNull(state.selectedRegion)
+        assertNull(state.selectedCategory)
+        assertEquals(listOf("prod-kakap-02"), state.products.map { it.id })
+    }
+
+    @Test
+    fun `pencarian dari beranda juga menampilkan destinasi`() = runTest(dispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.onOpenWithQuery("serang")
+        viewModel.load()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(listOf("dest-serang"), state.matchedDestinations.map { it.id })
+        assertTrue(state.products.isNotEmpty())
+        assertTrue(state.products.all { it.wilayah == "Serang" })
+    }
+
+    @Test
+    fun `kolom cari katalog tidak mencari destinasi`() = runTest(dispatcher) {
+        val viewModel = createViewModel()
+        viewModel.onOpenWithQuery("serang")
+        viewModel.load()
+        advanceUntilIdle()
+
+        viewModel.onSearchChange("tambakrejo")
+
+        assertTrue(viewModel.uiState.value.matchedDestinations.isEmpty())
+    }
+
+    @Test
     fun `memuat ulang mempertahankan filter`() = runTest(dispatcher) {
         val viewModel = createViewModel()
         viewModel.load()

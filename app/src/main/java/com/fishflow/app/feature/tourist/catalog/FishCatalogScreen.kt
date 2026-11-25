@@ -7,6 +7,7 @@
 // - Top bar berlogo dan bottom navigation
 // - Header hijau: judul, jumlah jenis ikan tersedia, chip filter wilayah
 // - Search bar dan chip kategori (kebutuhan Fungsi 4, belum ada di Figma)
+// - Destinasi wisata yang cocok, hanya saat dibuka dari pencarian beranda
 // - List kartu produk ikan: foto, nama, penjual, lokasi pengambilan, stok, harga/kg
 // - Klik produk atau tombol Pesan -> ke FishDetailScreen
 // - Empty state: "Produk belum tersedia"
@@ -56,16 +57,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.EmptyStateView
 import com.fishflow.app.core.ui.components.ErrorMessage
+import com.fishflow.app.core.ui.components.FishFlowBottomBar
 import com.fishflow.app.core.ui.components.FishFlowSearchBar
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.LoadingIndicator
 import com.fishflow.app.core.ui.components.OrderDesignTokens
+import com.fishflow.app.core.ui.components.TouristBottomBarItems
+import com.fishflow.app.data.model.Destination
 import com.fishflow.app.data.model.FishCategory
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.feature.tourist.catalog.components.CategoryFilterChips
 import com.fishflow.app.feature.tourist.catalog.components.FishProductCard
 import com.fishflow.app.feature.tourist.catalog.components.RegionFilterChips
-import com.fishflow.app.feature.tourist.order_history.TouristOrderBottomBar
+import com.fishflow.app.feature.tourist.destination.components.DestinationCard
 
 @Composable
 fun FishCatalogScreen(
@@ -75,6 +79,7 @@ fun FishCatalogScreen(
     onCategoryFilter: (FishCategory?) -> Unit,
     onClearFilter: () -> Unit,
     onProductClick: (FishProduct) -> Unit,
+    onDestinationClick: (Destination) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
@@ -86,7 +91,11 @@ fun FishCatalogScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = { FishFlowTopBar(title = "Explore Katalog", showBrand = true) },
         bottomBar = {
-            TouristOrderBottomBar(activeTab = "Katalog", onTabClick = onNavItemClick)
+            FishFlowBottomBar(
+                items = TouristBottomBarItems,
+                currentRoute = "Katalog",
+                onNavigate = onNavItemClick
+            )
         }
     ) { innerPadding ->
         LazyColumn(
@@ -107,9 +116,27 @@ fun FishCatalogScreen(
                 CatalogFilterSection(
                     uiState = uiState,
                     onSearchChange = onSearchChange,
-                    onCategoryFilter = onCategoryFilter,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    onCategoryFilter = onCategoryFilter
                 )
+            }
+
+            if (uiState.matchedDestinations.isNotEmpty()) {
+                item(key = "destination-title") {
+                    Text(
+                        text = "Destinasi Wisata",
+                        color = OrderDesignTokens.TextPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+                items(uiState.matchedDestinations, key = { it.id }) { destination ->
+                    DestinationCard(
+                        destination = destination,
+                        onClick = { onDestinationClick(destination) },
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
             }
 
             when {
@@ -147,14 +174,21 @@ fun FishCatalogScreen(
 @Composable
 fun FishCatalogScreen(
     onProductClick: (FishProduct) -> Unit,
+    onDestinationClick: (Destination) -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     onNavItemClick: (String) -> Unit = {},
+    initialQuery: String? = null,
+    onInitialQueryApplied: () -> Unit = {},
     viewModel: FishCatalogViewModel = viewModel(factory = FishCatalogViewModel.factory())
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {
+        if (initialQuery != null) {
+            viewModel.onOpenWithQuery(initialQuery)
+            onInitialQueryApplied()
+        }
         viewModel.load()
     }
 
@@ -165,6 +199,7 @@ fun FishCatalogScreen(
         onCategoryFilter = viewModel::onCategoryFilter,
         onClearFilter = viewModel::onClearFilter,
         onProductClick = onProductClick,
+        onDestinationClick = onDestinationClick,
         onRetry = viewModel::onRetry,
         modifier = modifier,
         onBack = onBack,
@@ -183,10 +218,11 @@ private fun CatalogHero(
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
             .background(OrderDesignTokens.MaritimeDark)
-            .padding(16.dp),
+            .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -245,7 +281,10 @@ private fun CatalogHero(
 
         // Jumlah hanya ditampilkan kalau datanya sudah pasti.
         if (!uiState.isLoading && uiState.errorMessage == null) {
-            AvailableCountBanner(count = uiState.products.size)
+            AvailableCountBanner(
+                count = uiState.products.size,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
 
         RegionFilterChips(
@@ -257,9 +296,9 @@ private fun CatalogHero(
 }
 
 @Composable
-private fun AvailableCountBanner(count: Int) {
+private fun AvailableCountBanner(count: Int, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White.copy(alpha = 0.1f))
@@ -291,16 +330,13 @@ private fun AvailableCountBanner(count: Int) {
 private fun CatalogFilterSection(
     uiState: FishCatalogUiState,
     onSearchChange: (String) -> Unit,
-    onCategoryFilter: (FishCategory?) -> Unit,
-    modifier: Modifier = Modifier
+    onCategoryFilter: (FishCategory?) -> Unit
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         FishFlowSearchBar(
             query = uiState.searchQuery,
             onQueryChange = onSearchChange,
+            modifier = Modifier.padding(horizontal = 16.dp),
             placeholder = "Cari nama ikan..."
         )
         CategoryFilterChips(

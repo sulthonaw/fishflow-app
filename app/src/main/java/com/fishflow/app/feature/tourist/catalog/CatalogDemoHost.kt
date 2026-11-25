@@ -22,26 +22,35 @@ import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.feature.tourist.cart.CartItem
 import com.fishflow.app.feature.tourist.cart.CartScreen
 import com.fishflow.app.feature.tourist.cart.CartUiState
+import com.fishflow.app.feature.tourist.home.TouristDestinationHost
 
 @Composable
 fun CatalogDemoHost(
     onExit: () -> Unit,
     onProceedToCheckout: (CartUiState) -> Unit,
     modifier: Modifier = Modifier,
-    onNavItemClick: (String) -> Unit = {}
+    onNavItemClick: (String) -> Unit = {},
+    initialQuery: String? = null,
+    initialProductId: String? = null
 ) {
-    var selectedProductId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedProductId by rememberSaveable { mutableStateOf(initialProductId) }
+    var selectedDestinationId by rememberSaveable { mutableStateOf<String?>(null) }
+    // Hanya dipakai sekali supaya tidak menimpa filter saat rotasi atau kembali dari detail.
+    var pendingQuery by rememberSaveable { mutableStateOf(initialQuery) }
+    // Detail yang dibuka langsung dari beranda kembali ke beranda, bukan ke katalog.
+    var isOpenedOnDetail by rememberSaveable { mutableStateOf(initialProductId != null) }
     var cartItem by rememberSaveable(stateSaver = CartItemSaver) {
         mutableStateOf<CartItem?>(null)
     }
 
     val productId = selectedProductId
+    val destinationId = selectedDestinationId
     val item = cartItem
 
     val onBack: () -> Unit = {
         when {
             cartItem != null -> cartItem = null
-            selectedProductId != null -> selectedProductId = null
+            selectedProductId != null && !isOpenedOnDetail -> selectedProductId = null
             else -> onExit()
         }
     }
@@ -56,6 +65,7 @@ fun CatalogDemoHost(
             onBrowseCatalog = {
                 cartItem = null
                 selectedProductId = null
+                isOpenedOnDetail = false
             },
             onProceedToCheckout = onProceedToCheckout
         )
@@ -67,11 +77,20 @@ fun CatalogDemoHost(
             modifier = modifier
         )
 
+        destinationId != null -> TouristDestinationHost(
+            onExit = { selectedDestinationId = null },
+            modifier = modifier,
+            initialDestinationId = destinationId
+        )
+
         else -> FishCatalogScreen(
             onProductClick = { product -> selectedProductId = product.id },
+            onDestinationClick = { destination -> selectedDestinationId = destination.id },
             modifier = modifier,
             onBack = onBack,
-            onNavItemClick = onNavItemClick
+            onNavItemClick = onNavItemClick,
+            initialQuery = pendingQuery,
+            onInitialQueryApplied = { pendingQuery = null }
         )
     }
 }
