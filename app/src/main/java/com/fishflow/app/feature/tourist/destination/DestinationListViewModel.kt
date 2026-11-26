@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.fishflow.app.data.model.Destination
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.repository.DestinationRepositoryImpl
 import com.fishflow.app.domain.usecase.tourism.GetDestinationsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +77,7 @@ class DestinationListViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Gagal memuat destinasi"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal memuat destinasi")
                         )
                     }
                 }

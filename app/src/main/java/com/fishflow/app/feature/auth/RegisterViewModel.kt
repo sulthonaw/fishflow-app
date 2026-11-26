@@ -2,6 +2,7 @@ package com.fishflow.app.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.core.util.ValidationUtils
 import com.fishflow.app.data.model.UserRole
 import com.fishflow.app.data.repository.AuthRepository
@@ -90,7 +91,10 @@ class RegisterViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isRegisterSuccess = false,
-                    errorMessage = error.message ?: "Pendaftaran gagal. Silakan coba lagi."
+                    errorMessage = ErrorMessageMapper.from(
+                        error,
+                        fallback = "Pendaftaran gagal. Silakan coba lagi."
+                    )
                 )
             }
         }
@@ -98,5 +102,9 @@ class RegisterViewModel(
 
     fun resetRegisterSuccess() {
         _uiState.value = _uiState.value.copy(isRegisterSuccess = false)
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.fishflow.app.core.network.SupabaseClientProvider
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.remote.ProfileDto
 import com.fishflow.app.data.repository.DestinationRepositoryImpl
 import com.fishflow.app.domain.usecase.tourism.GetActivitiesByDestinationUseCase
@@ -58,7 +59,7 @@ class AdminDashboardViewModel(
                         getActivities(destination.id).onSuccess {
                             activityCount += it.size
                         }.onFailure { error ->
-                            partialError = error.message
+                            partialError = ErrorMessageMapper.from(error, "Gagal memuat sebagian statistik")
                         }
                     }
 
@@ -83,7 +84,7 @@ class AdminDashboardViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Gagal memuat statistik"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal memuat statistik")
                         )
                     }
                 }

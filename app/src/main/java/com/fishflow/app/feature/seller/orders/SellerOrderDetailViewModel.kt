@@ -2,6 +2,7 @@ package com.fishflow.app.feature.seller.orders
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.Order
 import com.fishflow.app.data.repository.OrderRepository
 import com.fishflow.app.data.repository.OrderRepositoryImpl
@@ -39,7 +40,7 @@ class SellerOrderDetailViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = err.message ?: "Gagal memuat detail pesanan."
+                            errorMessage = ErrorMessageMapper.from(err, "Gagal memuat detail pesanan.")
                         )
                     }
                 }
@@ -78,7 +79,7 @@ class SellerOrderDetailViewModel(
                     _uiState.update {
                         it.copy(
                             isActionRunning = false,
-                            errorMessage = err.message ?: "Gagal memproses pesanan."
+                            errorMessage = ErrorMessageMapper.from(err, "Gagal memproses pesanan.")
                         )
                     }
                 }

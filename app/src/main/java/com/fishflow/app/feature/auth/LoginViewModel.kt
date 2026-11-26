@@ -2,6 +2,7 @@ package com.fishflow.app.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.core.util.ValidationUtils
 import com.fishflow.app.data.model.UserRole
 import com.fishflow.app.data.repository.AuthRepository
@@ -82,7 +83,10 @@ class LoginViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isLoginSuccess = false,
-                    errorMessage = error.message ?: "Login gagal. Periksa kembali email dan password Anda."
+                    errorMessage = ErrorMessageMapper.from(
+                        error,
+                        fallback = "Login gagal. Periksa kembali email dan password Anda."
+                    )
                 )
             }
         }

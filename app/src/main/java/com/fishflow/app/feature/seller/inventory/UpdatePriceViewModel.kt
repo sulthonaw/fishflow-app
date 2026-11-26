@@ -3,6 +3,7 @@ package com.fishflow.app.feature.seller.inventory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.repository.ProductRepository
 import com.fishflow.app.data.repository.ProductRepositoryImpl
@@ -98,8 +99,10 @@ class UpdatePriceViewModel(
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
-                    errorMessage = exception.message
-                        ?: "Gagal memperbarui harga produk."
+                    errorMessage = ErrorMessageMapper.from(
+                        exception,
+                        fallback = "Gagal memperbarui harga produk."
+                    )
                 )
             }
         }

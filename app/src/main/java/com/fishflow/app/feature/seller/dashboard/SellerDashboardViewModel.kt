@@ -3,6 +3,7 @@ package com.fishflow.app.feature.seller.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fishflow.app.core.network.SupabaseClientProvider
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.OrderStatus
 import com.fishflow.app.data.model.ProductStatus
 import com.fishflow.app.data.repository.AuthRepository
@@ -89,7 +90,10 @@ class SellerDashboardViewModel(
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = exception.message ?: "Gagal memuat data dashboard."
+                    errorMessage = ErrorMessageMapper.from(
+                        exception,
+                        fallback = "Gagal memuat data dashboard."
+                    )
                 )
             }
         }

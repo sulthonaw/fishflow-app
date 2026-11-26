@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.util.DateFormatter
@@ -61,6 +62,11 @@ fun AddCatchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
+
+    ErrorToastEffect(
+        errorMessage = uiState.errorMessage,
+        onConsumed = viewModel::clearError
+    )
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -245,15 +251,6 @@ fun AddCatchScreen(
                             }
                         }
                     }
-                }
-
-                uiState.errorMessage?.let { error ->
-                    Text(
-                        text = error,
-                        color = OrderDesignTokens.ErrorText,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
 
                 Button(

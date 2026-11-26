@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.fishflow.app.data.model.Destination
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.FishCategory
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.repository.DestinationRepositoryImpl
@@ -107,7 +108,7 @@ class FishCatalogViewModel(
                         it.copy(
                             products = emptyList(),
                             isLoading = false,
-                            errorMessage = error.message ?: "Gagal memuat katalog ikan"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal memuat katalog ikan")
                         )
                     }
                 }

@@ -1,4 +1,4 @@
-﻿// FishDetailScreen.kt
+// FishDetailScreen.kt
 // Developer: Octavia
 //
 // Detail produk ikan (sisi wisatawan).
@@ -102,6 +102,8 @@ fun FishDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val product = uiState.product
+
+    com.fishflow.app.core.ui.components.ErrorToastEffect(errorMessage = uiState.errorMessage)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),

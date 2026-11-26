@@ -2,6 +2,7 @@ package com.fishflow.app.feature.seller.orders
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.repository.AuthRepository
 import com.fishflow.app.data.repository.AuthRepositoryImpl
 import com.fishflow.app.data.repository.OrderRepository
@@ -42,7 +43,7 @@ class SellerOrderListViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = err.message ?: "Gagal memuat pesanan penjual."
+                            errorMessage = ErrorMessageMapper.from(err, "Gagal memuat pesanan penjual.")
                         )
                     }
                 }
@@ -70,7 +71,7 @@ class SellerOrderListViewModel(
             orderRepository.confirmOrder(orderId)
                 .onFailure { err ->
                     _uiState.update {
-                        it.copy(errorMessage = err.message ?: "Gagal mengonfirmasi pesanan.")
+                        it.copy(errorMessage = ErrorMessageMapper.from(err, "Gagal mengonfirmasi pesanan."))
                     }
                 }
         }
@@ -81,7 +82,7 @@ class SellerOrderListViewModel(
             orderRepository.rejectOrder(orderId)
                 .onFailure { err ->
                     _uiState.update {
-                        it.copy(errorMessage = err.message ?: "Gagal menolak pesanan.")
+                        it.copy(errorMessage = ErrorMessageMapper.from(err, "Gagal menolak pesanan."))
                     }
                 }
         }
@@ -92,7 +93,12 @@ class SellerOrderListViewModel(
             orderRepository.completeOrder(orderId, kodePickup)
                 .onFailure { err ->
                     _uiState.update {
-                        it.copy(errorMessage = err.message ?: "Kode pickup tidak valid atau gagal menyelesaikan pesanan.")
+                        it.copy(
+                            errorMessage = ErrorMessageMapper.from(
+                                err,
+                                "Kode pickup tidak valid atau gagal menyelesaikan pesanan."
+                            )
+                        )
                     }
                 }
         }

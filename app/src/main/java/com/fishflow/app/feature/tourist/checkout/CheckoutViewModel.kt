@@ -2,6 +2,7 @@ package com.fishflow.app.feature.tourist.checkout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.OrderItem
 import com.fishflow.app.data.repository.AuthRepository
 import com.fishflow.app.data.repository.AuthRepositoryImpl
@@ -89,11 +90,15 @@ class CheckoutViewModel(
                 _uiState.update {
                     it.copy(
                         isProcessing = false,
-                        errorMessage = err.message ?: "Gagal membuat pesanan."
+                        errorMessage = ErrorMessageMapper.from(err, "Gagal membuat pesanan.")
                     )
                 }
             }
         }
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 
     fun resetCreatedState() {

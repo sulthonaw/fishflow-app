@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.model.Order
 import com.fishflow.app.data.model.OrderItem
@@ -375,6 +376,10 @@ fun FishFlowNavGraph(
 
             composable(Screen.Checkout.route) {
                 val checkoutState by checkoutViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = checkoutState.errorMessage,
+                    onConsumed = checkoutViewModel::clearError
+                )
                 LaunchedEffect(checkoutState.isOrderCreated, checkoutState.orderId) {
                     val createdId = checkoutState.orderId
                     if (checkoutState.isOrderCreated && !createdId.isNullOrBlank()) {
@@ -397,6 +402,10 @@ fun FishFlowNavGraph(
 
             composable(Screen.OrderHistory.route) {
                 val historyState by orderHistoryViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = historyState.errorMessage,
+                    onConsumed = orderHistoryViewModel::clearError
+                )
                 OrderHistoryScreen(
                     orders = historyState.orders,
                     onOrderClick = { order ->
@@ -417,6 +426,10 @@ fun FishFlowNavGraph(
                 val orderId = backStackEntry.arguments?.getString(Screen.OrderTracking.ARG_ORDER_ID).orEmpty()
                 val trackingViewModel: OrderTrackingViewModel = viewModel()
                 val trackingState by trackingViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = trackingState.errorMessage,
+                    onConsumed = trackingViewModel::clearError
+                )
                 LaunchedEffect(orderId) {
                     trackingViewModel.observeOrder(orderId)
                 }
@@ -507,6 +520,10 @@ fun FishFlowNavGraph(
 
             composable(Screen.SellerOrders.route) {
                 val sellerOrderState by sellerOrderListViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = sellerOrderState.errorMessage,
+                    onConsumed = sellerOrderListViewModel::clearError
+                )
                 SellerOrderListScreen(
                     initialState = sellerOrderState,
                     onBack = { navController.popBackStack() },
@@ -530,6 +547,10 @@ fun FishFlowNavGraph(
                 val orderId = backStackEntry.arguments?.getString(Screen.SellerOrderDetail.ARG_ORDER_ID).orEmpty()
                 val detailViewModel: SellerOrderDetailViewModel = viewModel()
                 val detailState by detailViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = detailState.errorMessage,
+                    onConsumed = detailViewModel::clearError
+                )
                 LaunchedEffect(orderId) {
                     detailViewModel.observeOrder(orderId)
                 }

@@ -55,9 +55,21 @@ class AuthRemoteDataSource(
             "Password minimal 8 karakter."
         }
 
-        supabase.auth.signInWith(Email) {
-            this.email = normalizedEmail
-            this.password = password
+        try {
+            supabase.auth.signInWith(Email) {
+                this.email = normalizedEmail
+                this.password = password
+            }
+        } catch (e: Exception) {
+            val msg = e.message.orEmpty()
+            when {
+                msg.contains("invalid_credentials", ignoreCase = true) ||
+                    msg.contains("Invalid login credentials", ignoreCase = true) ->
+                    error("Email atau password salah.")
+                msg.contains("Email not confirmed", ignoreCase = true) ->
+                    error("Email belum dikonfirmasi. Silakan cek email Anda.")
+                else -> throw e
+            }
         }
 
         val authUser = supabase.auth.currentUserOrNull()

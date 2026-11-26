@@ -2,6 +2,7 @@ package com.fishflow.app.feature.tourist.order_history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.Order
 import com.fishflow.app.data.repository.AuthRepository
 import com.fishflow.app.data.repository.AuthRepositoryImpl
@@ -49,7 +50,7 @@ class OrderHistoryViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = err.message ?: "Gagal memuat riwayat pesanan."
+                            errorMessage = ErrorMessageMapper.from(err, "Gagal memuat riwayat pesanan.")
                         )
                     }
                 }
@@ -66,9 +67,13 @@ class OrderHistoryViewModel(
             orderRepository.cancelOrder(orderId)
                 .onFailure { err ->
                     _uiState.update {
-                        it.copy(errorMessage = err.message ?: "Gagal membatalkan pesanan.")
+                        it.copy(errorMessage = ErrorMessageMapper.from(err, "Gagal membatalkan pesanan."))
                     }
                 }
         }
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 }

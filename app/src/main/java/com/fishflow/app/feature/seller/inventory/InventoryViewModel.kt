@@ -2,6 +2,7 @@ package com.fishflow.app.feature.seller.inventory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.ProductStatus
 import com.fishflow.app.data.repository.AuthRepository
 import com.fishflow.app.data.repository.AuthRepositoryImpl
@@ -48,7 +49,7 @@ class InventoryViewModel(
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = exception.message ?: "Gagal memuat inventory."
+                    errorMessage = ErrorMessageMapper.from(exception, "Gagal memuat inventory.")
                 )
             }
         }
@@ -81,7 +82,7 @@ class InventoryViewModel(
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isRefreshing = false,
-                    errorMessage = exception.message ?: "Gagal memperbarui inventory."
+                    errorMessage = ErrorMessageMapper.from(exception, "Gagal memperbarui inventory.")
                 )
             }
         }
@@ -109,7 +110,7 @@ class InventoryViewModel(
                 throw e
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = exception.message ?: "Gagal mengubah status produk."
+                    errorMessage = ErrorMessageMapper.from(exception, "Gagal mengubah status produk.")
                 )
             }
         }

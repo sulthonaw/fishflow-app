@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.AdminBottomBarItems
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
 import com.fishflow.app.core.ui.components.FishFlowBottomBar
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.data.model.Activity
@@ -81,6 +82,11 @@ fun ManageDestinationScreen(
     modifier: Modifier = Modifier,
     useSeparateFormRoutes: Boolean = false
 ) {
+    ErrorToastEffect(
+        errorMessage = uiState.errorMessage,
+        onConsumed = onDismissMessage
+    )
+
     if (!useSeparateFormRoutes) {
         uiState.destinationForm?.let { form ->
             DestinationFormScreen(

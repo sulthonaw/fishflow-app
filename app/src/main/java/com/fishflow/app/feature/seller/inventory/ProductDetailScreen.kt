@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.util.CurrencyFormatter
@@ -49,6 +50,11 @@ fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    ErrorToastEffect(
+        errorMessage = uiState.error,
+        onConsumed = viewModel::clearError
+    )
 
     LaunchedEffect(product.id) {
         viewModel.loadProduct(product.id)

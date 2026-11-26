@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.repository.DestinationRepositoryImpl
 import com.fishflow.app.data.repository.ProductRepositoryImpl
 import com.fishflow.app.domain.usecase.product.GetProductsByRegionUseCase
@@ -69,7 +70,7 @@ class TouristHomeViewModel(
                         it.copy(
                             todayCatches = emptyList(),
                             isLoading = false,
-                            errorMessage = error.message ?: "Gagal memuat tangkapan hari ini"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal memuat tangkapan hari ini")
                         )
                     }
                 }
@@ -100,7 +101,7 @@ class TouristHomeViewModel(
                         it.copy(
                             featuredDestinations = emptyList(),
                             isDestinationLoading = false,
-                            destinationErrorMessage = error.message ?: "Gagal memuat destinasi"
+                            destinationErrorMessage = ErrorMessageMapper.from(error, "Gagal memuat destinasi")
                         )
                     }
                 }

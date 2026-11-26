@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.util.CurrencyFormatter
@@ -48,6 +49,11 @@ fun UpdatePriceScreen(
     viewModel: UpdatePriceViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    ErrorToastEffect(
+        errorMessage = uiState.errorMessage,
+        onConsumed = viewModel::clearMessages
+    )
 
     LaunchedEffect(product.id) {
         viewModel.loadProduct(product)
@@ -154,18 +160,6 @@ fun UpdatePriceScreen(
                                         color = OrderDesignTokens.ForestDeep
                                     )
                                 }
-                            }
-                        }
-
-                        uiState.errorMessage?.let { error ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(OrderDesignTokens.ErrorBg)
-                                    .padding(12.dp)
-                            ) {
-                                Text(text = error, color = OrderDesignTokens.ErrorText, fontSize = 12.sp)
                             }
                         }
 

@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.AdminBottomBarItems
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
 import com.fishflow.app.core.ui.components.FishFlowBottomBar
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 
@@ -57,6 +58,8 @@ fun AdminDashboardScreen(
     onBack: (() -> Unit)? = null,
     onNavItemClick: ((String) -> Unit)? = null
 ) {
+    ErrorToastEffect(errorMessage = uiState.errorMessage)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,

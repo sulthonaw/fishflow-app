@@ -3,6 +3,7 @@ package com.fishflow.app.feature.seller.`catch`
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.FishCatch
 import com.fishflow.app.data.repository.AuthRepository
 import com.fishflow.app.data.repository.AuthRepositoryImpl
@@ -137,8 +138,10 @@ class AddCatchViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isSaved = false,
-                    errorMessage = e.message
-                        ?: "Gagal menyimpan data tangkapan."
+                    errorMessage = ErrorMessageMapper.from(
+                        e,
+                        fallback = "Gagal menyimpan data tangkapan."
+                    )
                 )
             }
         }

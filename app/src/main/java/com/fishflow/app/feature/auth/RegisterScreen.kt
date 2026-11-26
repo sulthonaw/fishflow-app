@@ -64,6 +64,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.ui.theme.FishFlowTheme
 import com.fishflow.app.data.model.UserRole
@@ -76,6 +77,11 @@ fun RegisterScreen(
     viewModel: RegisterViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    ErrorToastEffect(
+        errorMessage = uiState.errorMessage,
+        onConsumed = viewModel::clearError
+    )
 
     LaunchedEffect(uiState.isRegisterSuccess) {
         if (uiState.isRegisterSuccess) {
@@ -357,23 +363,6 @@ private fun RegisterContent(
                             enabled = !uiState.isLoading,
                             onClick = { onRoleChange(UserRole.ADMIN) }
                         )
-                    }
-
-                    uiState.errorMessage?.let { error ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(OrderDesignTokens.ErrorBg)
-                                .padding(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            Text(
-                                text = error,
-                                color = OrderDesignTokens.ErrorText,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
                     }
 
                     Button(

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowBottomBar
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
@@ -54,6 +55,11 @@ fun InventoryScreen(
     viewModel: InventoryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    ErrorToastEffect(
+        errorMessage = uiState.errorMessage,
+        onConsumed = viewModel::clearError
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),

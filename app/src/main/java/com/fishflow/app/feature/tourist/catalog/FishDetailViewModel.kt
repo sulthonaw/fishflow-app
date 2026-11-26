@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.repository.ProductRepository
 import com.fishflow.app.data.repository.ProductRepositoryImpl
@@ -64,7 +65,7 @@ class FishDetailViewModel(
                         it.copy(
                             product = null,
                             isLoading = false,
-                            errorMessage = error.message ?: "Gagal memuat detail produk"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal memuat detail produk")
                         )
                     }
                 }

@@ -55,6 +55,8 @@ fun DestinationListScreen(
     onBack: (() -> Unit)? = null,
     onNavItemClick: ((String) -> Unit)? = null
 ) {
+    com.fishflow.app.core.ui.components.ErrorToastEffect(errorMessage = uiState.errorMessage)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,

@@ -71,6 +71,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.ui.components.QuantityStepper
@@ -84,6 +85,7 @@ fun CheckoutScreen(
     onBack: () -> Unit = {},
     onConfirmOrder: (CheckoutUiState) -> Unit = {}
 ) {
+    ErrorToastEffect(errorMessage = initialState.errorMessage)
     var uiState by remember { mutableStateOf(initialState) }
     val primaryItem = uiState.primaryItem
     val currentQty = primaryItem?.qty?.toInt() ?: 1

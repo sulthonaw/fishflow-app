@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 
@@ -45,6 +46,11 @@ fun ActivityFormScreen(
     modifier: Modifier = Modifier
 ) {
     val pageTitle = if (form.isEditing) "Edit Aktivitas" else "Tambah Aktivitas"
+
+    ErrorToastEffect(
+        errorMessage = form.errorMessage,
+        onConsumed = { onFormChange(form.copy(errorMessage = null)) }
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -153,23 +159,6 @@ fun ActivityFormScreen(
                                 fontSize = 12.sp,
                                 color = OrderDesignTokens.TextSecondary
                             )
-                        }
-
-                        form.errorMessage?.let { message ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(OrderDesignTokens.ErrorBg)
-                                    .padding(12.dp)
-                            ) {
-                                Text(
-                                    text = message,
-                                    color = OrderDesignTokens.ErrorText,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
                         }
                     }
                 }
