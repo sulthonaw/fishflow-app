@@ -18,6 +18,8 @@ data class ProductDetailUiState(
     val product: FishProduct? = null,
     val isLoading: Boolean = false,
     val isUpdatingStatus: Boolean = false,
+    val isDeleting: Boolean = false,
+    val isDeleted: Boolean = false,
     val error: String? = null
 )
 
@@ -101,6 +103,33 @@ class ProductDetailViewModel(
                 _uiState.value = _uiState.value.copy(
                     isUpdatingStatus = false,
                     error = ErrorMessageMapper.from(e, "Gagal memperbarui status produk.")
+                )
+            }
+        }
+    }
+
+    fun deleteProduct() {
+        val currentProduct = _uiState.value.product ?: return
+        if (_uiState.value.isDeleting) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isDeleting = true,
+                error = null
+            )
+
+            try {
+                repository.deleteProduct(currentProduct.id)
+                _uiState.value = _uiState.value.copy(
+                    isDeleting = false,
+                    isDeleted = true
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isDeleting = false,
+                    error = ErrorMessageMapper.from(e, "Gagal menghapus tangkapan.")
                 )
             }
         }

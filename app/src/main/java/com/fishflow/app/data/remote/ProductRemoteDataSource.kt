@@ -39,6 +39,7 @@ interface ProductRemoteDataSource {
     suspend fun updateStock(productId: String, stokBaru: Double)
     suspend fun updateStatus(productId: String, isActive: Boolean)
     suspend fun createProduct(product: FishProduct, catchId: String? = null): FishProduct
+    suspend fun deleteProduct(productId: String)
     fun subscribeToProductChanges(): Flow<List<FishProduct>>
 }
 
@@ -95,6 +96,10 @@ object InMemoryProductRemoteDataSource : ProductRemoteDataSource {
         )
         products.add(0, created)
         return created
+    }
+
+    override suspend fun deleteProduct(productId: String) {
+        products.removeAll { it.id == productId }
     }
 
     override fun subscribeToProductChanges(): Flow<List<FishProduct>> =
@@ -378,6 +383,15 @@ class SupabaseProductRemoteDataSource(
             }
             .decodeSingle<ProductDto>()
             .toDomain()
+    }
+
+    override suspend fun deleteProduct(productId: String) {
+        supabase.postgrest[Tables.PRODUCTS]
+            .delete {
+                filter {
+                    eq("id", productId)
+                }
+            }
     }
 
     override fun subscribeToProductChanges(): Flow<List<FishProduct>> = flow {

@@ -116,6 +116,24 @@ class InventoryViewModel(
         }
     }
 
+    fun onDeleteProduct(productId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(errorMessage = null)
+            try {
+                productRepository.deleteProduct(productId)
+                _uiState.value = _uiState.value.copy(
+                    products = _uiState.value.products.filterNot { it.id == productId }
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (exception: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = ErrorMessageMapper.from(exception, "Gagal menghapus tangkapan.")
+                )
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }

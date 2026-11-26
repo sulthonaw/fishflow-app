@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,10 +26,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,6 +60,7 @@ fun InventoryScreen(
     viewModel: InventoryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var productToDelete by remember { mutableStateOf<FishProduct?>(null) }
 
     ErrorToastEffect(
         errorMessage = uiState.errorMessage,
@@ -63,6 +69,35 @@ fun InventoryScreen(
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.loadInventory()
+    }
+
+    productToDelete?.let { target ->
+        AlertDialog(
+            onDismissRequest = { productToDelete = null },
+            title = { Text("Hapus Tangkapan?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Produk \"${target.namaIkan}\" akan dihapus permanen dari inventory Anda. Lanjutkan?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.onDeleteProduct(target.id)
+                        productToDelete = null
+                    }
+                ) {
+                    Text(
+                        text = "Hapus",
+                        color = OrderDesignTokens.ErrorText,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { productToDelete = null }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -140,7 +175,7 @@ fun InventoryScreen(
                         }
                     }
 
-                    uiState.errorMessage != null -> {
+                    uiState.errorMessage != null && uiState.products.isEmpty() -> {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -233,7 +268,8 @@ fun InventoryScreen(
                             ) { product ->
                                 InventoryItemCard(
                                     product = product,
-                                    onClick = { onProductClick(product) }
+                                    onClick = { onProductClick(product) },
+                                    onDeleteClick = { productToDelete = product }
                                 )
                             }
                         }
