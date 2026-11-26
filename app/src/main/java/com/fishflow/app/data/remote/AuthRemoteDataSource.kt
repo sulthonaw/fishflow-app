@@ -118,9 +118,23 @@ class AuthRemoteDataSource(
             }
         }
 
-        val userId = supabase.auth.currentUserOrNull()?.id ?: signedUp?.id ?: ""
+        if (supabase.auth.currentUserOrNull() == null) {
+            runCatching {
+                supabase.auth.signInWith(Email) {
+                    this.email = normalizedEmail
+                    this.password = password
+                }
+            }
+        }
+
+        val sessionUser = supabase.auth.currentUserOrNull()
+        if (sessionUser == null) {
+            error("Pendaftaran berhasil, namun verifikasi email masih aktif di Supabase. Nonaktifkan 'Confirm email' di Dashboard Supabase agar bisa langsung masuk.")
+        }
+
+        val userId = sessionUser.id.ifBlank { signedUp?.id.orEmpty() }
         if (userId.isNotBlank()) {
-            fetchProfile(userId)?.toDomain() ?: User(
+            runCatching { fetchProfile(userId) }.getOrNull()?.toDomain() ?: User(
                 id = userId,
                 email = normalizedEmail,
                 nama = trimmedName,

@@ -565,6 +565,9 @@ fun FishFlowNavGraph(
 
             composable(Screen.SellerOrders.route) {
                 val sellerOrderState by sellerOrderListViewModel.uiState.collectAsStateWithLifecycle()
+                LaunchedEffect(Unit) {
+                    sellerOrderListViewModel.refresh()
+                }
                 ErrorToastEffect(
                     errorMessage = sellerOrderState.errorMessage,
                     onConsumed = sellerOrderListViewModel::clearError

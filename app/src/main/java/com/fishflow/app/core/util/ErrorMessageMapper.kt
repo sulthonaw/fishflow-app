@@ -46,6 +46,15 @@ object ErrorMessageMapper {
                 msg.contains("Password should be", ignoreCase = true) ->
                 "Password minimal 8 karakter dan cukup kuat."
 
+            msg.contains("over_email_send_rate_limit", ignoreCase = true) ||
+                msg.contains("Too Many Requests", ignoreCase = true) ||
+                msg.contains("rate limit", ignoreCase = true) ||
+                msg.contains("429", ignoreCase = true) ->
+                "Terlalu banyak percobaan. Silakan tunggu beberapa menit lalu coba lagi."
+
+            msg.contains("email_address_invalid", ignoreCase = true) ->
+                "Format email tidak valid."
+
             msg.contains("Unable to resolve host", ignoreCase = true) ||
                 msg.contains("Failed to connect", ignoreCase = true) ||
                 msg.contains("Network is unreachable", ignoreCase = true) ||
