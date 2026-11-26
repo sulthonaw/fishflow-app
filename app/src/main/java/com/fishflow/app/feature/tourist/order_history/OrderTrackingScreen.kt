@@ -37,20 +37,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.automirrored.rounded.Chat
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Call
-import androidx.compose.material.icons.rounded.Chat
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.NearMe
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Sailing
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Storefront
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -77,6 +72,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.ui.components.StatusBadge
 import com.fishflow.app.core.util.CurrencyFormatter
@@ -93,8 +89,7 @@ fun OrderTrackingScreen(
     onBack: () -> Unit = {},
     onOpenMaps: () -> Unit = {},
     onCallSeller: () -> Unit = {},
-    onWhatsAppSeller: () -> Unit = {},
-    onNavItemClick: (String) -> Unit = {}
+    onWhatsAppSeller: () -> Unit = {}
 ) {
     var order by remember { mutableStateOf(initialOrder) }
     val primaryItem = order.items.firstOrNull()
@@ -104,12 +99,9 @@ fun OrderTrackingScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
         topBar = {
-            TrackingBrandHeader()
-        },
-        bottomBar = {
-            TouristOrderBottomBar(
-                activeTab = "Pesanan",
-                onTabClick = onNavItemClick
+            FishFlowTopBar(
+                title = "Tracking Pesanan",
+                onBack = onBack
             )
         }
     ) { innerPadding ->
@@ -173,76 +165,6 @@ fun OrderTrackingScreen(
                 SatisfactionAssuranceCard()
 
                 Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun TrackingBrandHeader(
-    title: String = "Pesanan",
-    onNotificationClick: () -> Unit = {}
-) {
-    Surface(
-        color = OrderDesignTokens.CanvasBg.copy(alpha = 0.94f),
-        shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .height(64.dp)
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.img_fishflow_logo),
-                    contentDescription = "Fish Flow Logo",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(32.dp)
-                )
-                Column {
-                    Text(
-                        text = "FISH FLOW",
-                        color = OrderDesignTokens.CoastalTeal,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
-                    Text(
-                        text = title,
-                        color = OrderDesignTokens.TextPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                IconButton(onClick = onNotificationClick) {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = "Notifikasi",
-                        tint = OrderDesignTokens.TextPrimary
-                    )
-                }
-                Image(
-                    painter = painterResource(id = R.drawable.img_profile_buyer),
-                    contentDescription = "Profil",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                )
             }
         }
     }
@@ -314,7 +236,7 @@ private fun TrackingCoastalHero(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.ReceiptLong,
+                            imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
                             contentDescription = null,
                             tint = OrderDesignTokens.MintAccent,
                             modifier = Modifier.size(15.dp)
@@ -643,7 +565,7 @@ private fun HarborLocationMapCard(
                     .height(48.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Chat,
+                    imageVector = Icons.AutoMirrored.Rounded.Chat,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp)
                 )
@@ -680,76 +602,6 @@ private fun SatisfactionAssuranceCard() {
             color = OrderDesignTokens.TextSecondary,
             fontSize = 12.sp,
             lineHeight = 16.sp
-        )
-    }
-}
-
-@Composable
-fun TouristOrderBottomBar(
-    activeTab: String,
-    onTabClick: (String) -> Unit
-) {
-    val navItems = listOf(
-        "Home" to Icons.Rounded.Home,
-        "Katalog" to Icons.Rounded.Storefront,
-        "Rencana" to Icons.Rounded.CalendarMonth,
-        "Pesanan" to Icons.Rounded.ReceiptLong,
-        "Profil" to Icons.Rounded.Person
-    )
-
-    Surface(
-        color = OrderDesignTokens.MaritimeDark,
-        shadowElevation = 8.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            navItems.forEach { (label, icon) ->
-                val isSelected = label == activeTab
-                TouristBottomBarItem(
-                    label = label,
-                    icon = icon,
-                    selected = isSelected,
-                    onClick = { onTabClick(label) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TouristBottomBarItem(
-    label: String,
-    icon: ImageVector,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(9999.dp))
-            .background(if (selected) OrderDesignTokens.MintAccent.copy(alpha = 0.2f) else Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (selected) OrderDesignTokens.MintAccent else OrderDesignTokens.SageMuted,
-            modifier = Modifier.size(18.dp)
-        )
-        Text(
-            text = label,
-            color = if (selected) OrderDesignTokens.MintAccent else OrderDesignTokens.SageMuted,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold
         )
     }
 }

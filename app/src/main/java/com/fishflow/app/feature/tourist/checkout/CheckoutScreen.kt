@@ -34,15 +34,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.AccountTree
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -72,6 +71,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.ui.components.QuantityStepper
 import com.fishflow.app.core.util.CurrencyFormatter
@@ -95,7 +95,10 @@ fun CheckoutScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
         topBar = {
-            CheckoutTopHeader(onBack = onBack)
+            FishFlowTopBar(
+                title = "Checkout Pembayaran",
+                onBack = onBack
+            )
         },
         bottomBar = {
             CheckoutStickyBottomBar(
@@ -186,58 +189,6 @@ fun CheckoutScreen(
 }
 
 @Composable
-private fun CheckoutTopHeader(onBack: () -> Unit) {
-    Surface(
-        color = OrderDesignTokens.CanvasBg.copy(alpha = 0.94f),
-        shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .height(64.dp)
-                .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Kembali",
-                        tint = OrderDesignTokens.TextPrimary
-                    )
-                }
-                Text(
-                    text = "Checkout Pembayaran",
-                    color = OrderDesignTokens.TextPrimary,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.19).sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Image(
-                painter = painterResource(id = R.drawable.img_profile_buyer),
-                contentDescription = "Profil Pembeli",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .padding(end = 4.dp)
-                    .size(32.dp)
-                    .clip(CircleShape)
-            )
-        }
-    }
-}
-
-@Composable
 private fun CheckoutCoastalHero(
     buyerName: String,
     buyerPhone: String,
@@ -291,7 +242,7 @@ private fun CheckoutCoastalHero(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.ReceiptLong,
+                        imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)

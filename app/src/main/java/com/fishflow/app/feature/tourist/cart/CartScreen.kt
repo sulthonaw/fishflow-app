@@ -57,6 +57,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.feature.tourist.cart.components.CartItemRow
 import com.fishflow.app.feature.tourist.cart.components.CartSummaryFooter
@@ -76,7 +77,10 @@ fun CartScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
         topBar = {
-            CartTopBar(onBack = onBack)
+            FishFlowTopBar(
+                title = "Keranjang Belanja",
+                onBack = onBack
+            )
         },
         bottomBar = {
             if (!uiState.isEmpty) {
@@ -137,55 +141,6 @@ fun CartScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun CartTopBar(onBack: () -> Unit) {
-    Surface(
-        color = OrderDesignTokens.CanvasBg.copy(alpha = 0.94f),
-        shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .height(64.dp)
-                .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Kembali",
-                        tint = OrderDesignTokens.TextPrimary
-                    )
-                }
-                Text(
-                    text = "Keranjang Belanja",
-                    color = OrderDesignTokens.TextPrimary,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.19).sp
-                )
-            }
-
-            Image(
-                painter = painterResource(id = R.drawable.img_profile_buyer),
-                contentDescription = "Profil",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .padding(end = 4.dp)
-                    .size(32.dp)
-                    .clip(CircleShape)
-            )
         }
     }
 }

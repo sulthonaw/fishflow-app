@@ -1,4 +1,4 @@
-﻿package com.fishflow.app.feature.tourist.budget
+package com.fishflow.app.feature.tourist.budget
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,37 +9,32 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.FishFlowTopBar
+import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.feature.tourist.budget.components.ActivitySelector
 import com.fishflow.app.feature.tourist.budget.components.CostBreakdownCard
 import com.fishflow.app.feature.tourist.budget.components.UnavailableCostNote
 
-// BudgetPlannerScreen.kt
-// Developer: Fatih
-//
-// Halaman estimasi anggaran wisata bahari.
-//
-// UI (sesuai mockup):
-// - Nama destinasi di header
-// - Checklist aktivitas dengan biayanya
-// - Aktivitas yang biayanya belum diketahui ditandai khusus
-// - Section bawah: Total estimasi anggaran (auto-update saat centang berubah)
-// - Catatan untuk komponen biaya yang belum pasti
-// - Tombol "Ubah Pilihan" dan "Selesai"
 @Composable
 fun BudgetPlannerScreen(
     uiState: BudgetPlannerUiState,
@@ -50,122 +45,139 @@ fun BudgetPlannerScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        TextButton(onClick = onChangeSelection) {
-            Text("Ubah Pilihan")
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = OrderDesignTokens.CanvasBg,
+        topBar = {
+            FishFlowTopBar(
+                title = "Estimasi Anggaran",
+                onBack = onChangeSelection
+            )
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+        ) {
+            CoastalHeroHeader(
+                badgeText = "Perencanaan Biaya",
+                title = uiState.destinationName.ifBlank { "Estimasi Anggaran" },
+                subtitle = "Centang aktivitas untuk melihat perkiraan biaya wisatamu."
+            )
 
-        Text(
-            text = "Estimasi Anggaran",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = uiState.destinationName,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = "Centang aktivitas untuk melihat perkiraan biaya wisatamu.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = OrderDesignTokens.CoastalTeal)
+                        }
+                    }
 
-        Spacer(Modifier.height(16.dp))
+                    uiState.errorMessage != null && uiState.allActivities.isEmpty() -> {
+                        Text(
+                            text = uiState.errorMessage,
+                            color = OrderDesignTokens.ErrorText,
+                            fontSize = 13.sp
+                        )
+                        Button(
+                            onClick = onRetry,
+                            shape = RoundedCornerShape(9999.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = OrderDesignTokens.CoastalTeal)
+                        ) {
+                            Text("Coba lagi")
+                        }
+                    }
 
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                    else -> {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Pilih Aktivitas",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OrderDesignTokens.TextPrimary
+                                )
+                                ActivitySelector(
+                                    activities = uiState.allActivities,
+                                    selectedIds = uiState.selectedActivityIds,
+                                    onToggle = onActivityToggle
+                                )
+                            }
+                        }
+
+                        if (uiState.hasUnavailableCost) {
+                            UnavailableCostNote(catatan = uiState.catatanBelumTersedia)
+                        }
+
+                        CostBreakdownCard(
+                            selectedActivities = uiState.selectedActivities,
+                            totalBiaya = uiState.totalBiaya
+                        )
+
+                        if (uiState.selectedCount == 0) {
+                            Text(
+                                text = "Belum ada aktivitas yang dipilih.",
+                                fontSize = 12.sp,
+                                color = OrderDesignTokens.TextMuted
+                            )
+                        }
+
+                        if (uiState.errorMessage != null) {
+                            Text(
+                                text = uiState.errorMessage,
+                                color = OrderDesignTokens.ErrorText,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = onDone,
+                            shape = RoundedCornerShape(9999.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = OrderDesignTokens.CoastalTeal,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                        ) {
+                            Text("Selesai", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        TextButton(
+                            onClick = onReset,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Reset pilihan",
+                                color = OrderDesignTokens.CoastalTeal,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+                    }
                 }
-            }
-
-            uiState.errorMessage != null && uiState.allActivities.isEmpty() -> {
-                Text(
-                    text = uiState.errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(Modifier.height(8.dp))
-                Button(onClick = onRetry) {
-                    Text("Coba lagi")
-                }
-            }
-
-            else -> {
-                Text(
-                    text = "Pilih Aktivitas",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                ActivitySelector(
-                    activities = uiState.allActivities,
-                    selectedIds = uiState.selectedActivityIds,
-                    onToggle = onActivityToggle
-                )
-
-                if (uiState.hasUnavailableCost) {
-                    Spacer(Modifier.height(12.dp))
-                    UnavailableCostNote(catatan = uiState.catatanBelumTersedia)
-                }
-
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Spacer(Modifier.height(16.dp))
-
-                CostBreakdownCard(
-                    selectedActivities = uiState.selectedActivities,
-                    totalBiaya = uiState.totalBiaya
-                )
-
-                if (uiState.selectedCount == 0) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "Belum ada aktivitas yang dipilih.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                if (uiState.errorMessage != null) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = uiState.errorMessage,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                Spacer(Modifier.height(20.dp))
-
-                Button(
-                    onClick = onDone,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Selesai")
-                }
-
-                TextButton(
-                    onClick = onReset,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Reset pilihan")
-                }
-
-                Spacer(Modifier.height(8.dp))
             }
         }
     }

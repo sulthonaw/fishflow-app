@@ -1,7 +1,8 @@
-﻿
 package com.fishflow.app.feature.seller.inventory
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,41 +12,41 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.FishFlowTopBar
+import com.fishflow.app.core.ui.components.OrderDesignTokens
+import com.fishflow.app.core.util.CurrencyFormatter
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.model.ProductStatus
 import com.fishflow.app.feature.seller.inventory.components.StockIndicator
-import java.text.NumberFormat
-import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     product: FishProduct,
-    viewModel: ProductDetailViewModel,
     onBack: () -> Unit,
     onUpdatePriceClick: (FishProduct) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ProductDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -53,25 +54,16 @@ fun ProductDetailScreen(
         viewModel.loadProduct(product.id)
     }
 
-    val currencyFormat = NumberFormat.getCurrencyInstance(
-        Locale("id", "ID")
-    )
-
     Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = OrderDesignTokens.CanvasBg,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Detail Produk")
-                },
-                navigationIcon = {
-                    TextButton(onClick = onBack) {
-                        Text("← Kembali")
-                    }
-                }
+            FishFlowTopBar(
+                title = "Detail Produk",
+                onBack = onBack
             )
         }
     ) { paddingValues ->
-
         when {
             uiState.isLoading -> {
                 Column(
@@ -81,9 +73,9 @@ fun ProductDetailScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = OrderDesignTokens.CoastalTeal)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Memuat detail produk...")
+                    Text("Memuat detail produk...", color = OrderDesignTokens.TextSecondary)
                 }
             }
 
@@ -98,15 +90,13 @@ fun ProductDetailScreen(
                 ) {
                     Text(
                         text = uiState.error ?: "Terjadi kesalahan",
-                        color = MaterialTheme.colorScheme.error
+                        color = OrderDesignTokens.ErrorText
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Button(
-                        onClick = {
-                            viewModel.loadProduct(product.id)
-                        }
+                        onClick = { viewModel.loadProduct(product.id) },
+                        shape = RoundedCornerShape(9999.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = OrderDesignTokens.CoastalTeal)
                     ) {
                         Text("Coba Lagi")
                     }
@@ -115,160 +105,129 @@ fun ProductDetailScreen(
 
             uiState.product != null -> {
                 val currentProduct = uiState.product!!
+                val isActive = currentProduct.status == ProductStatus.AKTIF
 
                 Column(
-                    modifier = modifier
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "🐟",
-                                fontSize = 48.sp
-                            )
-
-                            Text(
-                                text = currentProduct.namaIkan,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            Text(
-                                text = currentProduct.wilayah,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-
-                            val isActive = currentProduct.status == ProductStatus.AKTIF
-                            Text(
-                                text = if (isActive) {
-                                    "● Produk Aktif"
-                                } else {
-                                    "● Produk Nonaktif"
-                                },
-                                color = if (isActive) {
-                                    Color(0xFF2E7D32)
-                                } else {
-                                    Color(0xFFC62828)
-                                },
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp)
-                        ) {
-                            Text(
-                                text = "Harga Saat Ini",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = currencyFormat.format(
-                                    currentProduct.hargaPerKg
-                                ) + " / kg",
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Button(
-                                onClick = {
-                                    onUpdatePriceClick(currentProduct)
-                                },
-                                modifier = Modifier.fillMaxWidth()
+                    CoastalHeroHeader(
+                        badgeText = currentProduct.wilayah,
+                        title = currentProduct.namaIkan,
+                        subtitle = if (isActive) "Status: Produk Aktif" else "Status: Produk Nonaktif",
+                        trailingContent = {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(9999.dp))
+                                    .background(
+                                        if (isActive) OrderDesignTokens.MintAccent else OrderDesignTokens.ErrorBg
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
-                                Text("Perbarui Harga")
+                                Text(
+                                    text = if (isActive) "Aktif" else "Nonaktif",
+                                    color = if (isActive) {
+                                        OrderDesignTokens.CoastalTealDark
+                                    } else {
+                                        OrderDesignTokens.ErrorText
+                                    },
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text(
+                                    text = "Harga Saat Ini",
+                                    color = OrderDesignTokens.TextSecondary,
+                                    fontSize = 13.sp
+                                )
+                                Text(
+                                    text = "${CurrencyFormatter.formatRupiah(currentProduct.hargaPerKg)} / kg",
+                                    fontSize = 26.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OrderDesignTokens.ForestDeep
+                                )
+                                Button(
+                                    onClick = { onUpdatePriceClick(currentProduct) },
+                                    shape = RoundedCornerShape(9999.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = OrderDesignTokens.CoastalTeal,
+                                        contentColor = Color.White
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                ) {
+                                    Text("Perbarui Harga", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Informasi Stok",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OrderDesignTokens.TextPrimary
+                                )
+                                StockIndicator(stokTersedia = currentProduct.stokRiil)
+                                StockInfoRow("Stok tersedia", "${currentProduct.stokTersedia} kg")
+                                StockInfoRow("Stok teralokasi", "${currentProduct.stokTeralokasi} kg")
+                                StockInfoRow("Stok riil", "${currentProduct.stokRiil} kg", isHighlighted = true)
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text(
+                                    text = "Informasi Produk",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OrderDesignTokens.TextPrimary
+                                )
+                                StockInfoRow("ID Produk", currentProduct.id)
+                                StockInfoRow("ID Seller", currentProduct.sellerId)
+                                StockInfoRow("Wilayah", currentProduct.wilayah)
                             }
                         }
                     }
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "Informasi Stok",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            StockIndicator(
-                                stokTersedia = currentProduct.stokRiil
-                            )
-
-                            StockInfoRow(
-                                label = "Stok tersedia",
-                                value = "${currentProduct.stokTersedia} kg"
-                            )
-
-                            StockInfoRow(
-                                label = "Stok teralokasi",
-                                value = "${currentProduct.stokTeralokasi} kg"
-                            )
-
-                            StockInfoRow(
-                                label = "Stok riil",
-                                value = "${currentProduct.stokRiil} kg",
-                                isHighlighted = true
-                            )
-                        }
-                    }
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "Informasi Produk",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            StockInfoRow(
-                                label = "ID Produk",
-                                value = currentProduct.id
-                            )
-
-                            StockInfoRow(
-                                label = "ID Seller",
-                                value = currentProduct.sellerId
-                            )
-
-                            StockInfoRow(
-                                label = "Wilayah",
-                                value = currentProduct.wilayah
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
@@ -280,9 +239,13 @@ fun ProductDetailScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Produk tidak ditemukan")
+                    Text("Produk tidak ditemukan", color = OrderDesignTokens.TextSecondary)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = onBack) {
+                    Button(
+                        onClick = onBack,
+                        shape = RoundedCornerShape(9999.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = OrderDesignTokens.CoastalTeal)
+                    ) {
                         Text("Kembali")
                     }
                 }
@@ -302,25 +265,13 @@ private fun StockInfoRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
+        Text(text = label, color = OrderDesignTokens.TextSecondary, fontSize = 13.sp)
         Spacer(modifier = Modifier.width(8.dp))
-
         Text(
             text = value,
-            fontWeight = if (isHighlighted) {
-                FontWeight.Bold
-            } else {
-                FontWeight.Medium
-            },
-            color = if (isHighlighted) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
+            fontSize = 13.sp,
+            fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Medium,
+            color = if (isHighlighted) OrderDesignTokens.CoastalTeal else OrderDesignTokens.TextPrimary
         )
     }
 }

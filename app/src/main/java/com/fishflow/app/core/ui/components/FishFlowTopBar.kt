@@ -1,4 +1,4 @@
-﻿// FishFlowTopBar.kt
+// FishFlowTopBar.kt
 // Developer: Octavia
 //
 // Koneksi: Octavia bikin beranda dan katalog wisatawan yang paling banyak
@@ -79,7 +79,7 @@ fun FishFlowTopBar(
             Image(
                 painter = painterResource(id = R.drawable.img_fishflow_logo),
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .size(32.dp)
                     .clip(RoundedCornerShape(8.dp))

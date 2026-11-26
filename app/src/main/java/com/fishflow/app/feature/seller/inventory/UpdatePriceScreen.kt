@@ -1,45 +1,51 @@
-﻿
 package com.fishflow.app.feature.seller.inventory
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.FishFlowTopBar
+import com.fishflow.app.core.ui.components.OrderDesignTokens
+import com.fishflow.app.core.util.CurrencyFormatter
 import com.fishflow.app.data.model.FishProduct
-import java.text.NumberFormat
-import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdatePriceScreen(
     product: FishProduct,
-    viewModel: UpdatePriceViewModel,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: UpdatePriceViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -47,206 +53,165 @@ fun UpdatePriceScreen(
         viewModel.loadProduct(product)
     }
 
-    val currencyFormat = NumberFormat.getCurrencyInstance(
-        Locale("id", "ID")
-    )
-
     Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = OrderDesignTokens.CanvasBg,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Perbarui Harga")
-                },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack
-                    ) {
-                        Text("← Kembali")
-                    }
-                }
+            FishFlowTopBar(
+                title = "Perbarui Harga",
+                onBack = onBack
             )
         }
     ) { paddingValues ->
-
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Text(
-                        text = "🐟 ${uiState.namaIkan}",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "ID Produk: ${uiState.productId}",
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Text(
-                        text = "Harga Saat Ini",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = currencyFormat.format(uiState.hargaLama),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Text(
-                        text = "Per kilogram",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            OutlinedTextField(
-                value = uiState.hargaBaru,
-                onValueChange = viewModel::onPriceChange,
-                label = {
-                    Text("Harga Baru (Rp)")
-                },
-                placeholder = {
-                    Text("Contoh: 50000")
-                },
-                supportingText = {
-                    Text("Masukkan harga baru dalam Rupiah.")
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !uiState.isSaving
+            CoastalHeroHeader(
+                badgeText = "ID Produk: ${uiState.productId}",
+                title = uiState.namaIkan,
+                subtitle = "Perbarui harga jual per kilogram untuk etalase wisatawan."
             )
 
-            if (uiState.hargaBaruValue != null &&
-                uiState.isPriceValid
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Card(
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    shadowElevation = 2.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Preview Harga Baru",
-                            fontWeight = FontWeight.Medium
+                            text = "Harga Saat Ini",
+                            color = OrderDesignTokens.TextSecondary,
+                            fontSize = 13.sp
                         )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
                         Text(
-                            text = currencyFormat.format(
-                                uiState.hargaBaruValue
+                            text = "${CurrencyFormatter.formatRupiah(uiState.hargaLama)} / kg",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OrderDesignTokens.ForestDeep
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    shadowElevation = 2.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = uiState.hargaBaru,
+                            onValueChange = viewModel::onPriceChange,
+                            label = { Text("Harga Baru (Rp)") },
+                            placeholder = { Text("Contoh: 50000") },
+                            supportingText = { Text("Masukkan harga baru dalam Rupiah per kg.") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = OrderDesignTokens.CoastalTeal,
+                                unfocusedBorderColor = OrderDesignTokens.DividerColor
                             ),
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            enabled = !uiState.isSaving
                         )
 
-                        Text(
-                            text = "Per kilogram"
-                        )
+                        if (uiState.hargaBaruValue != null && uiState.isPriceValid) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(OrderDesignTokens.MintAccent.copy(alpha = 0.35f))
+                                    .padding(14.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Preview Harga Baru",
+                                        fontSize = 12.sp,
+                                        color = OrderDesignTokens.CoastalTealDark,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = "${CurrencyFormatter.formatRupiah(uiState.hargaBaruValue!!)} / kg",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OrderDesignTokens.ForestDeep
+                                    )
+                                }
+                            }
+                        }
+
+                        uiState.errorMessage?.let { error ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(OrderDesignTokens.ErrorBg)
+                                    .padding(12.dp)
+                            ) {
+                                Text(text = error, color = OrderDesignTokens.ErrorText, fontSize = 12.sp)
+                            }
+                        }
+
+                        uiState.successMessage?.let { success ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(OrderDesignTokens.MintAccent.copy(alpha = 0.5f))
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = success,
+                                    color = OrderDesignTokens.CoastalTealDark,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = viewModel::savePrice,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(9999.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = OrderDesignTokens.CoastalTeal,
+                                contentColor = Color.White
+                            ),
+                            enabled = uiState.canSave
+                        ) {
+                            if (uiState.isSaving) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.White
+                                )
+                            } else {
+                                Text("Simpan Perubahan", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
-            }
 
-            if (uiState.errorMessage != null) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = uiState.errorMessage ?: "",
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-
-            if (uiState.successMessage != null) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = uiState.successMessage ?: "",
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-
-            Button(
-                onClick = viewModel::savePrice,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = uiState.canSave
-            ) {
-                if (uiState.isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .height(20.dp),
-                        strokeWidth = 2.dp
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                } else {
-                    Text("Simpan Perubahan")
-                }
-            }
-
-            if (uiState.hargaBaru.isNotEmpty()) {
-                when {
-                    !uiState.isPriceValid -> {
-                        Text(
-                            text = "Harga harus berupa angka lebih dari Rp0.",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    !uiState.isPriceChanged -> {
-                        Text(
-                            text = "Harga baru sama dengan harga saat ini.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    else -> {
-                        Text(
-                            text = "Harga baru valid dan siap disimpan.",
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
