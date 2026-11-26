@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Landscape
-import androidx.compose.material.icons.rounded.LocalActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -52,7 +51,6 @@ fun AdminDashboardScreen(
     uiState: AdminDashboardUiState,
     onRefresh: () -> Unit,
     onManageDestinations: () -> Unit,
-    onManageActivities: () -> Unit,
     onManageUsers: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
@@ -95,7 +93,7 @@ fun AdminDashboardScreen(
                 CoastalHeroHeader(
                     badgeText = "Panel Pengelola",
                     title = "Dashboard Admin",
-                    subtitle = "Kelola destinasi wisata, aktivitas pesisir, dan akun pengguna FishFlow."
+                    subtitle = "Kelola destinasi wisata, aktivitas pantai, dan akun pengguna."
                 )
 
                 Column(
@@ -150,20 +148,14 @@ fun AdminDashboardScreen(
 
                     AdminMenuCard(
                         icon = Icons.Rounded.Landscape,
-                        title = "Kelola Destinasi",
-                        description = "Tambah, ubah, dan hapus destinasi wisata pesisir.",
+                        title = "Kelola Destinasi & Aktivitas",
+                        description = "Tambah, ubah, dan hapus destinasi wisata beserta daftar aktivitas dan biayanya.",
                         onClick = onManageDestinations
-                    )
-                    AdminMenuCard(
-                        icon = Icons.Rounded.LocalActivity,
-                        title = "Kelola Aktivitas & Biaya",
-                        description = "Atur aktivitas dan komponen biaya di setiap destinasi.",
-                        onClick = onManageActivities
                     )
                     AdminMenuCard(
                         icon = Icons.Rounded.Group,
                         title = "Kelola Akun",
-                        description = "Lihat daftar akun penjual dan wisatawan.",
+                        description = "Pantau dan atur status aktif akun wisatawan, penjual, serta admin.",
                         onClick = onManageUsers
                     )
 
@@ -177,7 +169,6 @@ fun AdminDashboardScreen(
 @Composable
 fun AdminDashboardScreen(
     onManageDestinations: () -> Unit,
-    onManageActivities: () -> Unit,
     onManageUsers: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
@@ -189,7 +180,6 @@ fun AdminDashboardScreen(
         uiState = uiState,
         onRefresh = viewModel::refresh,
         onManageDestinations = onManageDestinations,
-        onManageActivities = onManageActivities,
         onManageUsers = onManageUsers,
         modifier = modifier,
         onBack = onBack,

@@ -120,7 +120,6 @@ fun TourismDemoHost(modifier: Modifier = Modifier) {
 
         DemoRoute.AdminDashboard -> AdminDashboardScreen(
             onManageDestinations = { route = DemoRoute.ManageDestinations },
-            onManageActivities = { route = DemoRoute.ManageDestinations },
             onManageUsers = { route = DemoRoute.ManageUsers },
             modifier = modifier,
             onBack = { route = DemoRoute.Menu }
