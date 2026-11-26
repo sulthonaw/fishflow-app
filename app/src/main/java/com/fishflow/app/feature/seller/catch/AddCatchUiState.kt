@@ -1,16 +1,19 @@
-﻿
 package com.fishflow.app.feature.seller.`catch`
 
 import android.net.Uri
+import com.fishflow.app.data.model.FishCategory
 
 data class AddCatchUiState(
     val jenisIkan: String = "",
     val berat: String = "",
+    val hargaPerKg: String = "",
+    val kategori: FishCategory = FishCategory.PELAGIS,
     val tanggalTangkap: String = "",
     val fotoUri: Uri? = null,
 
     val jenisIkanError: String? = null,
     val beratError: String? = null,
+    val hargaError: String? = null,
     val tanggalError: String? = null,
 
     val isLoading: Boolean = false,
