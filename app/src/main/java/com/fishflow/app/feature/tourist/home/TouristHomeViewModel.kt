@@ -1,4 +1,4 @@
-﻿// TouristHomeViewModel.kt
+// TouristHomeViewModel.kt
 // Developer: Octavia
 //
 // ViewModel beranda wisatawan.
@@ -114,8 +114,8 @@ class TouristHomeViewModel(
         fun factory(): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 TouristHomeViewModel(
-                    getProducts = GetProductsByRegionUseCase(ProductRepositoryImpl.default()),
-                    getDestinations = GetDestinationsUseCase(DestinationRepositoryImpl.default())
+                    getProducts = GetProductsByRegionUseCase(ProductRepositoryImpl.supabase()),
+                    getDestinations = GetDestinationsUseCase(DestinationRepositoryImpl.supabase())
                 )
             }
         }

@@ -1,4 +1,4 @@
-﻿package com.fishflow.app.feature.tourist.destination
+package com.fishflow.app.feature.tourist.destination
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -105,7 +105,7 @@ class DestinationListViewModel(
             initializer {
                 DestinationListViewModel(
                     getDestinations = GetDestinationsUseCase(
-                        DestinationRepositoryImpl.default()
+                        DestinationRepositoryImpl.supabase()
                     )
                 )
             }

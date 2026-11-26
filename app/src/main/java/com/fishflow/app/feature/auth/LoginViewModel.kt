@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fishflow.app.core.util.ValidationUtils
 import com.fishflow.app.data.model.UserRole
-import kotlinx.coroutines.delay
+import com.fishflow.app.data.repository.AuthRepository
+import com.fishflow.app.data.repository.AuthRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val authRepository: AuthRepository = AuthRepositoryImpl()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
@@ -64,25 +67,22 @@ class LoginViewModel : ViewModel() {
                 isLoginSuccess = false
             )
 
-            delay(350)
-            val matched = InMemoryAuthStore.authenticate(
+            authRepository.login(
                 email = currentState.email,
                 password = currentState.password
-            )
-
-            if (matched != null) {
+            ).onSuccess { user ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isLoginSuccess = true,
-                    authenticatedRole = matched.role,
-                    authenticatedName = matched.name,
+                    authenticatedRole = user.role,
+                    authenticatedName = user.nama,
                     errorMessage = null
                 )
-            } else {
+            }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isLoginSuccess = false,
-                    errorMessage = "Email atau password belum terdaftar. Gunakan akun demo atau daftar akun baru."
+                    errorMessage = error.message ?: "Login gagal. Periksa kembali email dan password Anda."
                 )
             }
         }

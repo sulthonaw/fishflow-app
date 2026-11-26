@@ -1,7 +1,14 @@
-﻿package com.fishflow.app.data.remote
+package com.fishflow.app.data.remote
 
+import com.fishflow.app.core.network.SupabaseClientProvider
 import com.fishflow.app.data.model.Activity
 import com.fishflow.app.data.model.Destination
+import com.fishflow.app.supabase.Tables
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.util.UUID
 
 // DestinationRemoteDataSource.kt
@@ -249,4 +256,198 @@ object InMemoryDestinationRemoteDataSource : DestinationRemoteDataSource {
             isAvailable = false
         )
     )
+}
+
+@Serializable
+private data class DestinationDto(
+    val id: String = "",
+    val nama: String = "",
+    val wilayah: String = "",
+    val deskripsi: String = "",
+    @SerialName("foto_url") val fotoUrl: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null
+) {
+    fun toDomain(): Destination = Destination(
+        id = id,
+        nama = nama,
+        wilayah = wilayah,
+        deskripsi = deskripsi,
+        fotoUrl = fotoUrl,
+        latitude = latitude,
+        longitude = longitude
+    )
+}
+
+@Serializable
+private data class DestinationPayload(
+    val nama: String,
+    val wilayah: String,
+    val deskripsi: String,
+    @SerialName("foto_url") val fotoUrl: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null
+)
+
+@Serializable
+private data class ActivityDto(
+    val id: String = "",
+    @SerialName("destination_id") val destinationId: String = "",
+    val nama: String = "",
+    val kategori: String = "",
+    val biaya: Double? = null,
+    @SerialName("is_available") val isAvailable: Boolean = true
+) {
+    fun toDomain(): Activity = Activity(
+        id = id,
+        destinationId = destinationId,
+        nama = nama,
+        kategori = kategori,
+        biaya = biaya,
+        isAvailable = isAvailable
+    )
+}
+
+@Serializable
+private data class ActivityPayload(
+    @SerialName("destination_id") val destinationId: String,
+    val nama: String,
+    val kategori: String,
+    val biaya: Double? = null,
+    @SerialName("is_available") val isAvailable: Boolean = true
+)
+
+class SupabaseDestinationRemoteDataSource(
+    private val supabase: SupabaseClient = SupabaseClientProvider.client
+) : DestinationRemoteDataSource {
+
+    override suspend fun getAllDestinations(): List<Destination> =
+        supabase.postgrest[Tables.DESTINATIONS]
+            .select {
+                order("nama", Order.ASCENDING)
+            }
+            .decodeList<DestinationDto>()
+            .map { it.toDomain() }
+
+    override suspend fun getDestinationsByRegion(wilayah: String): List<Destination> =
+        supabase.postgrest[Tables.DESTINATIONS]
+            .select {
+                filter {
+                    ilike("wilayah", wilayah.trim())
+                }
+                order("nama", Order.ASCENDING)
+            }
+            .decodeList<DestinationDto>()
+            .map { it.toDomain() }
+
+    override suspend fun getDestinationById(id: String): Destination? =
+        supabase.postgrest[Tables.DESTINATIONS]
+            .select {
+                filter {
+                    eq("id", id)
+                }
+            }
+            .decodeSingleOrNull<DestinationDto>()
+            ?.toDomain()
+
+    override suspend fun getActivitiesByDestination(destinationId: String): List<Activity> =
+        supabase.postgrest[Tables.ACTIVITIES]
+            .select {
+                filter {
+                    eq("destination_id", destinationId)
+                }
+                order("nama", Order.ASCENDING)
+            }
+            .decodeList<ActivityDto>()
+            .map { it.toDomain() }
+
+    override suspend fun getActivityById(id: String): Activity? =
+        supabase.postgrest[Tables.ACTIVITIES]
+            .select {
+                filter {
+                    eq("id", id)
+                }
+            }
+            .decodeSingleOrNull<ActivityDto>()
+            ?.toDomain()
+
+    override suspend fun insertDestination(destination: Destination): Destination {
+        val payload = DestinationPayload(
+            nama = destination.nama,
+            wilayah = destination.wilayah,
+            deskripsi = destination.deskripsi,
+            fotoUrl = destination.fotoUrl,
+            latitude = destination.latitude,
+            longitude = destination.longitude
+        )
+        return supabase.postgrest[Tables.DESTINATIONS]
+            .insert(payload) { select() }
+            .decodeSingle<DestinationDto>()
+            .toDomain()
+    }
+
+    override suspend fun updateDestination(destination: Destination): Destination {
+        val payload = DestinationPayload(
+            nama = destination.nama,
+            wilayah = destination.wilayah,
+            deskripsi = destination.deskripsi,
+            fotoUrl = destination.fotoUrl,
+            latitude = destination.latitude,
+            longitude = destination.longitude
+        )
+        return supabase.postgrest[Tables.DESTINATIONS]
+            .update(payload) {
+                select()
+                filter { eq("id", destination.id) }
+            }
+            .decodeSingle<DestinationDto>()
+            .toDomain()
+    }
+
+    override suspend fun deleteDestination(id: String): Boolean {
+        supabase.postgrest[Tables.DESTINATIONS]
+            .delete {
+                filter { eq("id", id) }
+            }
+        return true
+    }
+
+    override suspend fun insertActivity(activity: Activity): Activity {
+        val payload = ActivityPayload(
+            destinationId = activity.destinationId,
+            nama = activity.nama,
+            kategori = activity.kategori,
+            biaya = activity.biaya,
+            isAvailable = activity.isAvailable
+        )
+        return supabase.postgrest[Tables.ACTIVITIES]
+            .insert(payload) { select() }
+            .decodeSingle<ActivityDto>()
+            .toDomain()
+    }
+
+    override suspend fun updateActivity(activity: Activity): Activity {
+        val payload = ActivityPayload(
+            destinationId = activity.destinationId,
+            nama = activity.nama,
+            kategori = activity.kategori,
+            biaya = activity.biaya,
+            isAvailable = activity.isAvailable
+        )
+        return supabase.postgrest[Tables.ACTIVITIES]
+            .update(payload) {
+                select()
+                filter { eq("id", activity.id) }
+            }
+            .decodeSingle<ActivityDto>()
+            .toDomain()
+    }
+
+    override suspend fun deleteActivity(id: String): Boolean {
+        supabase.postgrest[Tables.ACTIVITIES]
+            .delete {
+                filter { eq("id", id) }
+            }
+        return true
+    }
 }

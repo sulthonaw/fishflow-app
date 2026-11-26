@@ -1,4 +1,4 @@
-﻿// FishDetailViewModel.kt
+// FishDetailViewModel.kt
 // Developer: Octavia
 //
 // ViewModel detail ikan. Ambil produk by ID (termasuk info penjual dan stok tersedia)
@@ -97,7 +97,7 @@ class FishDetailViewModel(
             initializer {
                 FishDetailViewModel(
                     productId = productId,
-                    repository = ProductRepositoryImpl.default()
+                    repository = ProductRepositoryImpl.supabase()
                 )
             }
         }

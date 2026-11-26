@@ -1,4 +1,4 @@
-﻿package com.fishflow.app.feature.admin
+package com.fishflow.app.feature.admin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -422,7 +422,7 @@ class ManageDestinationViewModel(
     companion object {
         fun factory(): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = DestinationRepositoryImpl.default()
+                val repository = DestinationRepositoryImpl.supabase()
                 ManageDestinationViewModel(
                     getDestinations = GetDestinationsUseCase(repository),
                     getActivities = GetActivitiesByDestinationUseCase(repository),

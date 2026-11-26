@@ -1,4 +1,4 @@
-﻿package com.fishflow.app.feature.tourist.destination
+package com.fishflow.app.feature.tourist.destination
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -88,7 +88,7 @@ class DestinationDetailViewModel(
     companion object {
         fun factory(destinationId: String): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = DestinationRepositoryImpl.default()
+                val repository = DestinationRepositoryImpl.supabase()
                 DestinationDetailViewModel(
                     destinationId = destinationId,
                     repository = repository,

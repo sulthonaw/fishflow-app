@@ -102,7 +102,7 @@ fun OrderStatusStepper(
         TrackingStep(
             title = "Penyerahan Selesai & Ditutup",
             trailingLabel = "Tahap Akhir",
-            description = "Scan QR dan verifikasi ikan bersama Penjual."
+            description = "Verifikasi kode pengambilan dan serah terima ikan bersama Penjual."
         )
     )
 

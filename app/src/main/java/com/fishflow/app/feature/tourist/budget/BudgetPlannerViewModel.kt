@@ -116,7 +116,7 @@ class BudgetPlannerViewModel(
                     destinationId = destinationId,
                     destinationName = destinationName,
                     getActivities = GetActivitiesByDestinationUseCase(
-                        DestinationRepositoryImpl.default()
+                        DestinationRepositoryImpl.supabase()
                     ),
                     calculateBudgetEstimate = CalculateBudgetEstimateUseCase(),
                     initialSelectedIds = initialSelectedIds

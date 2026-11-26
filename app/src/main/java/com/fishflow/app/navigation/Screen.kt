@@ -71,6 +71,8 @@ sealed class Screen(val route: String) {
     data object AdminGraph : Screen("admin_graph")
     data object AdminDashboard : Screen("admin_dashboard")
     data object ManageDestinations : Screen("manage_destinations")
+    data object DestinationForm : Screen("destination_form")
+    data object ActivityForm : Screen("activity_form")
     data object ManageUsers : Screen("manage_users")
     data object AdminProfile : Screen("admin_profile")
 }

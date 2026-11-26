@@ -12,20 +12,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +42,7 @@ import com.fishflow.app.core.util.CurrencyFormatter
 import com.fishflow.app.feature.seller.dashboard.components.QuickActionButtons
 import com.fishflow.app.feature.seller.dashboard.components.StatCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SellerDashboardScreen(
     onTambahTangkapan: () -> Unit,
@@ -74,44 +72,30 @@ fun SellerDashboardScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = viewModel::onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
         ) {
-            CoastalHeroHeader(
-                badgeText = "Nelayan Mitra",
-                title = "Halo, ${uiState.namaUser}",
-                subtitle = "Kelola stok tangkapan dan pesanan kapal hari ini.",
-                trailingContent = {
-                    IconButton(onClick = viewModel::onRefresh) {
-                        Icon(
-                            imageVector = Icons.Rounded.Refresh,
-                            contentDescription = "Segarkan",
-                            tint = OrderDesignTokens.MintAccent
-                        )
-                    }
-                }
-            )
-
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                if (uiState.isLoading) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(color = OrderDesignTokens.CoastalTeal)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text("Memuat dashboard...", color = OrderDesignTokens.TextSecondary)
-                    }
-                }
+                CoastalHeroHeader(
+                    badgeText = "Nelayan Mitra",
+                    title = "Halo, ${uiState.namaUser}",
+                    subtitle = "Kelola stok tangkapan dan pesanan kapal hari ini."
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
 
                 uiState.errorMessage?.let { error ->
                     Card(
@@ -288,6 +272,7 @@ fun SellerDashboardScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
             }
+        }
         }
     }
 }

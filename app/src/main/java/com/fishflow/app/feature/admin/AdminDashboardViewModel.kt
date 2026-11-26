@@ -1,13 +1,17 @@
-﻿package com.fishflow.app.feature.admin
+package com.fishflow.app.feature.admin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.fishflow.app.core.network.SupabaseClientProvider
+import com.fishflow.app.data.remote.ProfileDto
 import com.fishflow.app.data.repository.DestinationRepositoryImpl
 import com.fishflow.app.domain.usecase.tourism.GetActivitiesByDestinationUseCase
 import com.fishflow.app.domain.usecase.tourism.GetDestinationsUseCase
+import com.fishflow.app.supabase.Tables
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,11 +62,18 @@ class AdminDashboardViewModel(
                         }
                     }
 
+                    val userCount = runCatching {
+                        SupabaseClientProvider.client.postgrest[Tables.PROFILES]
+                            .select()
+                            .decodeList<ProfileDto>()
+                            .size
+                    }.getOrElse { AdminUserDirectory.count() }
+
                     _uiState.update {
                         it.copy(
                             totalDestinations = destinations.size,
                             totalActivities = activityCount,
-                            totalUsers = AdminUserDirectory.count(),
+                            totalUsers = userCount,
                             isLoading = false,
                             errorMessage = partialError
                         )
@@ -83,7 +94,7 @@ class AdminDashboardViewModel(
     companion object {
         fun factory(): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = DestinationRepositoryImpl.default()
+                val repository = DestinationRepositoryImpl.supabase()
                 AdminDashboardViewModel(
                     getDestinations = GetDestinationsUseCase(repository),
                     getActivities = GetActivitiesByDestinationUseCase(repository)

@@ -1,4 +1,4 @@
-﻿// FishCatalogViewModel.kt
+// FishCatalogViewModel.kt
 // Developer: Octavia
 //
 // ViewModel katalog ikan untuk wisatawan.
@@ -147,10 +147,10 @@ class FishCatalogViewModel(
             initializer {
                 FishCatalogViewModel(
                     getProductsByRegion = GetProductsByRegionUseCase(
-                        ProductRepositoryImpl.default()
+                        ProductRepositoryImpl.supabase()
                     ),
                     getDestinations = GetDestinationsUseCase(
-                        DestinationRepositoryImpl.default()
+                        DestinationRepositoryImpl.supabase()
                     )
                 )
             }

@@ -42,18 +42,19 @@ import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.NearMe
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Sailing
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -82,6 +83,7 @@ import com.fishflow.app.data.model.OrderStatus
 import com.fishflow.app.feature.tourist.order_history.components.OrderStatusStepper
 import com.fishflow.app.feature.tourist.order_history.components.PickupCodeCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderTrackingScreen(
     modifier: Modifier = Modifier,
@@ -92,6 +94,7 @@ fun OrderTrackingScreen(
     onWhatsAppSeller: () -> Unit = {}
 ) {
     var order by remember { mutableStateOf(initialOrder) }
+    var isRefreshing by remember { mutableStateOf(false) }
     val primaryItem = order.items.firstOrNull()
     val showPickupCode = order.status == OrderStatus.SIAP_DIAMBIL || order.status == OrderStatus.SELESAI
 
@@ -105,26 +108,30 @@ fun OrderTrackingScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                val nextStatus = when (order.status) {
+                    OrderStatus.MENUNGGU_KONFIRMASI -> OrderStatus.DIKONFIRMASI
+                    OrderStatus.DIKONFIRMASI -> OrderStatus.SIAP_DIAMBIL
+                    OrderStatus.SIAP_DIAMBIL -> OrderStatus.SELESAI
+                    OrderStatus.SELESAI -> OrderStatus.SIAP_DIAMBIL
+                    else -> order.status
+                }
+                order = order.copy(status = nextStatus)
+                isRefreshing = false
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
         ) {
-            TrackingCoastalHero(
-                order = order,
-                onBack = onBack,
-                onRefresh = {
-                    val nextStatus = when (order.status) {
-                        OrderStatus.MENUNGGU_KONFIRMASI -> OrderStatus.DIKONFIRMASI
-                        OrderStatus.DIKONFIRMASI -> OrderStatus.SIAP_DIAMBIL
-                        OrderStatus.SIAP_DIAMBIL -> OrderStatus.SELESAI
-                        OrderStatus.SELESAI -> OrderStatus.SIAP_DIAMBIL
-                        else -> order.status
-                    }
-                    order = order.copy(status = nextStatus)
-                }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                TrackingCoastalHero(order = order)
 
             Column(
                 modifier = Modifier
@@ -167,15 +174,12 @@ fun OrderTrackingScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+        }
     }
 }
 
 @Composable
-private fun TrackingCoastalHero(
-    order: Order,
-    onBack: () -> Unit,
-    onRefresh: () -> Unit
-) {
+private fun TrackingCoastalHero(order: Order) {
     val firstItem = order.items.firstOrNull()
     val totalKg = order.items.sumOf { it.qty }
 
@@ -188,34 +192,21 @@ private fun TrackingCoastalHero(
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Kembali ke Daftar Pesanan",
-                        tint = Color.White
-                    )
-                }
+            Column {
                 Text(
-                    text = "Tracking Pesanan Ikan",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.35.sp
+                    text = "PEMANTAUAN REAL-TIME",
+                    color = OrderDesignTokens.MintAccent,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
                 )
-                IconButton(onClick = onRefresh) {
-                    Icon(
-                        imageVector = Icons.Rounded.Refresh,
-                        contentDescription = "Segarkan Status",
-                        tint = OrderDesignTokens.MintAccent
-                    )
-                }
+                Text(
+                    text = "Tarik ke bawah untuk memperbarui status",
+                    color = OrderDesignTokens.SageLight,
+                    fontSize = 12.sp
+                )
             }
 
             Column(

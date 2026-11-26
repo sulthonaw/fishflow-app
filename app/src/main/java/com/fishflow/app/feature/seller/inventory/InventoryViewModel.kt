@@ -1,16 +1,21 @@
-﻿
 package com.fishflow.app.feature.seller.inventory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.model.ProductStatus
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.fishflow.app.data.repository.AuthRepository
+import com.fishflow.app.data.repository.AuthRepositoryImpl
+import com.fishflow.app.data.repository.ProductRepository
+import com.fishflow.app.data.repository.ProductRepositoryImpl
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class InventoryViewModel : ViewModel() {
+class InventoryViewModel(
+    private val authRepository: AuthRepository = AuthRepositoryImpl(),
+    private val productRepository: ProductRepository = ProductRepositoryImpl.supabase()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InventoryUiState())
     val uiState = _uiState.asStateFlow()
@@ -27,70 +32,30 @@ class InventoryViewModel : ViewModel() {
             )
 
             try {
-                delay(500)
-
-                val mockProducts = listOf(
-                    FishProduct(
-                        id = "fish-001",
-                        sellerId = "seller-001",
-                        namaIkan = "Ikan Tuna",
-                        hargaPerKg = 45000.0,
-                        stokTersedia = 25.0,
-                        stokTeralokasi = 5.0,
-                        status = ProductStatus.AKTIF,
-                        wilayah = "Pantai Tambakrejo"
-                    ),
-                    FishProduct(
-                        id = "fish-002",
-                        sellerId = "seller-001",
-                        namaIkan = "Ikan Lele",
-                        hargaPerKg = 28000.0,
-                        stokTersedia = 2.0,
-                        stokTeralokasi = 0.0,
-                        status = ProductStatus.AKTIF,
-                        wilayah = "Pantai Tambakrejo"
-                    ),
-                    FishProduct(
-                        id = "fish-003",
-                        sellerId = "seller-001",
-                        namaIkan = "Ikan Kakap",
-                        hargaPerKg = 55000.0,
-                        stokTersedia = 8.0,
-                        stokTeralokasi = 2.0,
-                        status = ProductStatus.AKTIF,
-                        wilayah = "Pantai Tambakrejo"
-                    ),
-                    FishProduct(
-                        id = "fish-004",
-                        sellerId = "seller-001",
-                        namaIkan = "Ikan Gurame",
-                        hargaPerKg = 40000.0,
-                        stokTersedia = 15.0,
-                        stokTeralokasi = 3.0,
-                        status = ProductStatus.NONAKTIF,
-                        wilayah = "Pantai Tambakrejo"
-                    )
-                )
-
+                val user = authRepository.getCurrentUser()
+                val products = if (user != null) {
+                    productRepository.getProductsBySeller(user.id)
+                } else {
+                    emptyList()
+                }
                 _uiState.value = _uiState.value.copy(
-                    products = mockProducts,
+                    products = products,
                     isLoading = false,
                     errorMessage = null
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = exception.message
-                        ?: "Gagal memuat inventory."
+                    errorMessage = exception.message ?: "Gagal memuat inventory."
                 )
             }
         }
     }
 
     fun onSearchQueryChange(query: String) {
-        _uiState.value = _uiState.value.copy(
-            searchQuery = query
-        )
+        _uiState.value = _uiState.value.copy(searchQuery = query)
     }
 
     fun onRefresh() {
@@ -101,42 +66,56 @@ class InventoryViewModel : ViewModel() {
             )
 
             try {
-                delay(500)
+                val user = authRepository.getCurrentUser()
+                val products = if (user != null) {
+                    productRepository.getProductsBySeller(user.id)
+                } else {
+                    emptyList()
+                }
                 _uiState.value = _uiState.value.copy(
+                    products = products,
                     isRefreshing = false
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isRefreshing = false,
-                    errorMessage = exception.message
-                        ?: "Gagal memperbarui inventory."
+                    errorMessage = exception.message ?: "Gagal memperbarui inventory."
                 )
             }
         }
     }
 
     fun onToggleStatus(productId: String) {
-        val updatedProducts = _uiState.value.products.map { product ->
-            if (product.id == productId) {
-                val newStatus = if (product.status == ProductStatus.AKTIF) {
-                    ProductStatus.NONAKTIF
-                } else {
-                    ProductStatus.AKTIF
-                }
-                product.copy(status = newStatus)
-            } else {
-                product
-            }
+        val target = _uiState.value.products.firstOrNull { it.id == productId } ?: return
+        val newStatus = if (target.status == ProductStatus.AKTIF) {
+            ProductStatus.NONAKTIF
+        } else {
+            ProductStatus.AKTIF
         }
 
-        _uiState.value = _uiState.value.copy(
-            products = updatedProducts
-        )
+        viewModelScope.launch {
+            try {
+                productRepository.updateStatus(
+                    productId = productId,
+                    isActive = (newStatus == ProductStatus.AKTIF)
+                )
+                val updatedProducts = _uiState.value.products.map { product ->
+                    if (product.id == productId) product.copy(status = newStatus) else product
+                }
+                _uiState.value = _uiState.value.copy(products = updatedProducts)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (exception: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = exception.message ?: "Gagal mengubah status produk."
+                )
+            }
+        }
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(
-            errorMessage = null
-        )
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 }

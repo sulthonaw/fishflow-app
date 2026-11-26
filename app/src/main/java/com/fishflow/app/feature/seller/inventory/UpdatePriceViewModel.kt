@@ -1,10 +1,12 @@
-﻿
+
 package com.fishflow.app.feature.seller.inventory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fishflow.app.data.model.FishProduct
-import kotlinx.coroutines.delay
+import com.fishflow.app.data.repository.ProductRepository
+import com.fishflow.app.data.repository.ProductRepositoryImpl
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -31,7 +33,9 @@ data class UpdatePriceUiState(
         get() = isPriceValid && isPriceChanged && !isSaving
 }
 
-class UpdatePriceViewModel : ViewModel() {
+class UpdatePriceViewModel(
+    private val productRepository: ProductRepository = ProductRepositoryImpl.supabase()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UpdatePriceUiState())
     val uiState = _uiState.asStateFlow()
@@ -80,15 +84,17 @@ class UpdatePriceViewModel : ViewModel() {
             )
 
             try {
-                delay(800)
+                val newPrice = currentState.hargaBaruValue!!
+                productRepository.updatePrice(currentState.productId, newPrice)
 
                 _uiState.value = currentState.copy(
-                    hargaLama = currentState.hargaBaruValue!!,
+                    hargaLama = newPrice,
                     isSaving = false,
                     errorMessage = null,
                     successMessage = "Harga ${currentState.namaIkan} berhasil diperbarui!"
                 )
-
+            } catch (e: CancellationException) {
+                throw e
             } catch (exception: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,

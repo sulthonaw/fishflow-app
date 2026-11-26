@@ -2,12 +2,20 @@
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.fishflow.app.core.network.SupabaseClientProvider
+import com.fishflow.app.data.remote.ProfileDto
+import com.fishflow.app.supabase.Tables
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 // ManageUsersViewModel.kt
 // Developer: Fatih
@@ -101,8 +109,34 @@ class ManageUsersViewModel : ViewModel() {
     }
 
     fun load() {
-        _uiState.update {
-            it.copy(users = AdminUserDirectory.all(), isLoading = false)
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val profiles = SupabaseClientProvider.client.postgrest[Tables.PROFILES]
+                    .select {
+                        order("nama", Order.ASCENDING)
+                    }
+                    .decodeList<ProfileDto>()
+                    .map { dto ->
+                        ManagedUser(
+                            id = dto.id,
+                            nama = dto.nama,
+                            email = dto.email,
+                            role = runCatching { AdminUserRole.valueOf(dto.role) }
+                                .getOrDefault(AdminUserRole.WISATAWAN),
+                            isActive = dto.isActive
+                        )
+                    }
+                _uiState.update {
+                    it.copy(users = profiles, isLoading = false)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(users = AdminUserDirectory.all(), isLoading = false)
+                }
+            }
         }
     }
 
@@ -117,8 +151,29 @@ class ManageUsersViewModel : ViewModel() {
     }
 
     fun onToggleActive(userId: String) {
-        AdminUserDirectory.toggleActive(userId)
-        load()
+        val current = _uiState.value.users.firstOrNull { it.id == userId } ?: return
+        val nextActive = !current.isActive
+        viewModelScope.launch {
+            runCatching {
+                SupabaseClientProvider.client.postgrest[Tables.PROFILES]
+                    .update({
+                        set("is_active", nextActive)
+                    }) {
+                        filter { eq("id", userId) }
+                    }
+            }.onSuccess {
+                _uiState.update { state ->
+                    state.copy(
+                        users = state.users.map { user ->
+                            if (user.id == userId) user.copy(isActive = nextActive) else user
+                        }
+                    )
+                }
+            }.onFailure {
+                AdminUserDirectory.toggleActive(userId)
+                load()
+            }
+        }
     }
 
     fun onResetFilter() {

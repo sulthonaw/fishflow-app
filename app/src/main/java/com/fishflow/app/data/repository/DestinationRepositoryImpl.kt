@@ -1,9 +1,10 @@
-﻿package com.fishflow.app.data.repository
+package com.fishflow.app.data.repository
 
 import com.fishflow.app.data.model.Activity
 import com.fishflow.app.data.model.Destination
 import com.fishflow.app.data.remote.DestinationRemoteDataSource
 import com.fishflow.app.data.remote.InMemoryDestinationRemoteDataSource
+import com.fishflow.app.data.remote.SupabaseDestinationRemoteDataSource
 
 // DestinationRepositoryImpl.kt
 // Developer: Fatih
@@ -111,5 +112,9 @@ class DestinationRepositoryImpl(
 
     companion object {
         fun default(): DestinationRepository = DestinationRepositoryImpl()
+
+        fun supabase(): DestinationRepository = DestinationRepositoryImpl(
+            remote = SupabaseDestinationRemoteDataSource()
+        )
     }
 }

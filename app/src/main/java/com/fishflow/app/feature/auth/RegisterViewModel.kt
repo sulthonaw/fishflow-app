@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fishflow.app.core.util.ValidationUtils
 import com.fishflow.app.data.model.UserRole
-import kotlinx.coroutines.delay
+import com.fishflow.app.data.repository.AuthRepository
+import com.fishflow.app.data.repository.AuthRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class RegisterViewModel : ViewModel() {
+class RegisterViewModel(
+    private val authRepository: AuthRepository = AuthRepositoryImpl()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState = _uiState.asStateFlow()
@@ -72,19 +75,24 @@ class RegisterViewModel : ViewModel() {
                 isRegisterSuccess = false
             )
 
-            delay(350)
-            InMemoryAuthStore.register(
-                name = currentState.name,
+            authRepository.register(
+                nama = currentState.name,
                 email = currentState.email,
                 password = currentState.password,
                 role = currentState.selectedRole
-            )
-
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                isRegisterSuccess = true,
-                errorMessage = null
-            )
+            ).onSuccess {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isRegisterSuccess = true,
+                    errorMessage = null
+                )
+            }.onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isRegisterSuccess = false,
+                    errorMessage = error.message ?: "Pendaftaran gagal. Silakan coba lagi."
+                )
+            }
         }
     }
 

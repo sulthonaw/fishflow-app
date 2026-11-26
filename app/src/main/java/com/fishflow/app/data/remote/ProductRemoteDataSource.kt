@@ -7,11 +7,26 @@
 package com.fishflow.app.data.remote
 
 import com.fishflow.app.R
+import com.fishflow.app.core.network.SupabaseClientProvider
 import com.fishflow.app.data.model.FishCategory
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.model.ProductStatus
+import com.fishflow.app.supabase.RealtimeChannels
+import com.fishflow.app.supabase.Tables
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Order
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 interface ProductRemoteDataSource {
     suspend fun getAllProducts(): List<FishProduct>
@@ -172,4 +187,159 @@ object InMemoryProductRemoteDataSource : ProductRemoteDataSource {
             namaPenjual = "Nelayan Jolosutro"
         )
     )
+}
+
+@Serializable
+private data class SellerProfileJoinDto(
+    @SerialName("nama_kapal") val namaKapal: String = ""
+)
+
+@Serializable
+private data class ProfileJoinDto(
+    val nama: String = "",
+    @SerialName("seller_profiles") val sellerProfiles: SellerProfileJoinDto? = null
+)
+
+@Serializable
+private data class ProductDto(
+    val id: String = "",
+    @SerialName("seller_id") val sellerId: String = "",
+    @SerialName("nama_ikan") val namaIkan: String = "",
+    val kategori: String = FishCategory.PELAGIS.name,
+    @SerialName("harga_per_kg") val hargaPerKg: Double = 0.0,
+    val wilayah: String = "",
+    @SerialName("lokasi_pengambilan") val lokasiPengambilan: String = "",
+    val status: String = ProductStatus.AKTIF.name,
+    @SerialName("stok_tersedia") val stokTersedia: Double = 0.0,
+    @SerialName("stok_teralokasi") val stokTeralokasi: Double = 0.0,
+    @SerialName("batas_pengambilan") val batasPengambilan: String? = null,
+    @SerialName("info_penanganan") val infoPenanganan: String? = null,
+    @SerialName("foto_url") val fotoUrl: String? = null,
+    @SerialName("created_at") val createdAt: String = "",
+    private val profiles: ProfileJoinDto? = null
+) {
+    fun toDomain(): FishProduct = FishProduct(
+        id = id,
+        sellerId = sellerId,
+        namaIkan = namaIkan,
+        kategori = runCatching { FishCategory.valueOf(kategori) }.getOrDefault(FishCategory.PELAGIS),
+        hargaPerKg = hargaPerKg,
+        wilayah = wilayah,
+        lokasiPengambilan = lokasiPengambilan,
+        namaPenjual = profiles?.nama.orEmpty(),
+        namaKapal = profiles?.sellerProfiles?.namaKapal.orEmpty(),
+        status = runCatching { ProductStatus.valueOf(status) }.getOrDefault(ProductStatus.AKTIF),
+        stokTersedia = stokTersedia,
+        stokTeralokasi = stokTeralokasi,
+        batasPengambilan = batasPengambilan,
+        infoPenanganan = infoPenanganan,
+        fotoUrl = fotoUrl,
+        createdAt = createdAt
+    )
+}
+
+class SupabaseProductRemoteDataSource(
+    private val supabase: SupabaseClient = SupabaseClientProvider.client
+) : ProductRemoteDataSource {
+
+    private val selectColumns = Columns.raw("*, profiles(nama, seller_profiles(nama_kapal))")
+
+    override suspend fun getAllProducts(): List<FishProduct> =
+        supabase.postgrest[Tables.PRODUCTS]
+            .select(columns = selectColumns) {
+                order("nama_ikan", Order.ASCENDING)
+            }
+            .decodeList<ProductDto>()
+            .map { it.toDomain() }
+
+    override suspend fun getActiveProducts(): List<FishProduct> =
+        supabase.postgrest[Tables.PRODUCTS]
+            .select(columns = selectColumns) {
+                filter {
+                    eq("status", ProductStatus.AKTIF.name)
+                }
+                order("nama_ikan", Order.ASCENDING)
+            }
+            .decodeList<ProductDto>()
+            .map { it.toDomain() }
+
+    override suspend fun getProductsByRegion(wilayah: String): List<FishProduct> =
+        supabase.postgrest[Tables.PRODUCTS]
+            .select(columns = selectColumns) {
+                filter {
+                    ilike("wilayah", wilayah.trim())
+                }
+                order("nama_ikan", Order.ASCENDING)
+            }
+            .decodeList<ProductDto>()
+            .map { it.toDomain() }
+
+    override suspend fun getProductsBySeller(sellerId: String): List<FishProduct> =
+        supabase.postgrest[Tables.PRODUCTS]
+            .select(columns = selectColumns) {
+                filter {
+                    eq("seller_id", sellerId)
+                }
+                order("nama_ikan", Order.ASCENDING)
+            }
+            .decodeList<ProductDto>()
+            .map { it.toDomain() }
+
+    override suspend fun getProductById(id: String): FishProduct? =
+        supabase.postgrest[Tables.PRODUCTS]
+            .select(columns = selectColumns) {
+                filter {
+                    eq("id", id)
+                }
+            }
+            .decodeSingleOrNull<ProductDto>()
+            ?.toDomain()
+
+    override suspend fun updatePrice(productId: String, hargaBaru: Double) {
+        supabase.postgrest[Tables.PRODUCTS]
+            .update({
+                set("harga_per_kg", hargaBaru)
+            }) {
+                filter {
+                    eq("id", productId)
+                }
+            }
+    }
+
+    override suspend fun updateStock(productId: String, stokBaru: Double) {
+        supabase.postgrest[Tables.PRODUCTS]
+            .update({
+                set("stok_tersedia", stokBaru)
+            }) {
+                filter {
+                    eq("id", productId)
+                }
+            }
+    }
+
+    override suspend fun updateStatus(productId: String, isActive: Boolean) {
+        val status = if (isActive) ProductStatus.AKTIF.name else ProductStatus.NONAKTIF.name
+        supabase.postgrest[Tables.PRODUCTS]
+            .update({
+                set("status", status)
+            }) {
+                filter {
+                    eq("id", productId)
+                }
+            }
+    }
+
+    override fun subscribeToProductChanges(): Flow<List<FishProduct>> = flow {
+        emit(getAllProducts())
+        val channel = supabase.channel(RealtimeChannels.PRODUCTS_CHANNEL)
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+            table = Tables.PRODUCTS
+        }
+        channel.subscribe()
+        try {
+            emitAll(changes.map { getAllProducts() })
+        } finally {
+            runCatching { channel.unsubscribe() }
+        }
+    }
 }
