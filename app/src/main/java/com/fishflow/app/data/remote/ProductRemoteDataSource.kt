@@ -37,6 +37,7 @@ interface ProductRemoteDataSource {
     suspend fun updatePrice(productId: String, hargaBaru: Double)
     suspend fun updateStock(productId: String, stokBaru: Double)
     suspend fun updateStatus(productId: String, isActive: Boolean)
+    suspend fun createProduct(product: FishProduct, catchId: String? = null): FishProduct
     fun subscribeToProductChanges(): Flow<List<FishProduct>>
 }
 
@@ -85,6 +86,14 @@ object InMemoryProductRemoteDataSource : ProductRemoteDataSource {
             val newStatus = if (isActive) ProductStatus.AKTIF else ProductStatus.NONAKTIF
             products[index] = products[index].copy(status = newStatus)
         }
+    }
+
+    override suspend fun createProduct(product: FishProduct, catchId: String?): FishProduct {
+        val created = product.copy(
+            id = product.id.ifBlank { "prod-${products.size + 1}" }
+        )
+        products.add(0, created)
+        return created
     }
 
     override fun subscribeToProductChanges(): Flow<List<FishProduct>> =
@@ -188,6 +197,23 @@ object InMemoryProductRemoteDataSource : ProductRemoteDataSource {
         )
     )
 }
+
+@Serializable
+private data class InsertProductPayload(
+    @SerialName("seller_id") val sellerId: String,
+    @SerialName("catch_id") val catchId: String? = null,
+    @SerialName("nama_ikan") val namaIkan: String,
+    val kategori: String,
+    @SerialName("harga_per_kg") val hargaPerKg: Double,
+    val wilayah: String,
+    @SerialName("lokasi_pengambilan") val lokasiPengambilan: String,
+    val status: String,
+    @SerialName("stok_tersedia") val stokTersedia: Double,
+    @SerialName("stok_teralokasi") val stokTeralokasi: Double = 0.0,
+    @SerialName("batas_pengambilan") val batasPengambilan: String? = null,
+    @SerialName("info_penanganan") val infoPenanganan: String? = null,
+    @SerialName("foto_url") val fotoUrl: String? = null
+)
 
 @Serializable
 private data class SellerProfileJoinDto(
@@ -327,6 +353,30 @@ class SupabaseProductRemoteDataSource(
                     eq("id", productId)
                 }
             }
+    }
+
+    override suspend fun createProduct(product: FishProduct, catchId: String?): FishProduct {
+        val payload = InsertProductPayload(
+            sellerId = product.sellerId,
+            catchId = catchId?.takeIf { it.isNotBlank() },
+            namaIkan = product.namaIkan,
+            kategori = product.kategori.name,
+            hargaPerKg = product.hargaPerKg,
+            wilayah = product.wilayah,
+            lokasiPengambilan = product.lokasiPengambilan,
+            status = product.status.name,
+            stokTersedia = product.stokTersedia,
+            stokTeralokasi = product.stokTeralokasi,
+            batasPengambilan = product.batasPengambilan,
+            infoPenanganan = product.infoPenanganan,
+            fotoUrl = product.fotoUrl
+        )
+        return supabase.postgrest[Tables.PRODUCTS]
+            .insert(payload) {
+                select(columns = selectColumns)
+            }
+            .decodeSingle<ProductDto>()
+            .toDomain()
     }
 
     override fun subscribeToProductChanges(): Flow<List<FishProduct>> = flow {

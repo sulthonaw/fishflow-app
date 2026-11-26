@@ -77,6 +77,13 @@ class ProductRepositoryImpl(
         remote.updateStatus(productId, isActive)
     }
 
+    override suspend fun createProduct(
+        product: FishProduct,
+        catchId: String?
+    ): Result<FishProduct> = request {
+        remote.createProduct(product, catchId)
+    }
+
     override fun observeProducts(): Flow<List<FishProduct>> {
         return remote.subscribeToProductChanges()
     }

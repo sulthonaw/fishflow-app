@@ -53,6 +53,12 @@ interface ProductRepository {
         isActive: Boolean
     ) {}
 
+    // Membuat produk baru dari tangkapan nelayan
+    suspend fun createProduct(
+        product: FishProduct,
+        catchId: String? = null
+    ): Result<FishProduct> = Result.failure(UnsupportedOperationException("createProduct belum diimplementasikan"))
+
     // Mengamati perubahan data produk
     fun observeProducts(): Flow<List<FishProduct>> = emptyFlow()
 }

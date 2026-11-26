@@ -169,6 +169,51 @@ fun AddCatchScreen(
                         )
 
                         OutlinedTextField(
+                            value = uiState.hargaPerKg,
+                            onValueChange = viewModel::onHargaChange,
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Harga Jual per Kg") },
+                            placeholder = { Text("Contoh: 45000") },
+                            prefix = { Text("Rp ") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = OrderDesignTokens.CoastalTeal,
+                                unfocusedBorderColor = OrderDesignTokens.DividerColor
+                            ),
+                            enabled = !uiState.isLoading,
+                            isError = uiState.hargaError != null,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            supportingText = {
+                                uiState.hargaError?.let {
+                                    Text(text = it, color = OrderDesignTokens.ErrorText)
+                                }
+                            }
+                        )
+
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "Kategori Ikan",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = OrderDesignTokens.TextSecondary
+                            )
+                            androidx.compose.foundation.layout.FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                com.fishflow.app.data.model.FishCategory.entries.forEach { category ->
+                                    androidx.compose.material3.FilterChip(
+                                        selected = uiState.kategori == category,
+                                        onClick = { viewModel.onKategoriChange(category) },
+                                        enabled = !uiState.isLoading,
+                                        label = { Text(category.label) }
+                                    )
+                                }
+                            }
+                        }
+
+                        OutlinedTextField(
                             value = uiState.tanggalTangkap,
                             onValueChange = {},
                             modifier = Modifier.fillMaxWidth(),
