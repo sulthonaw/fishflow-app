@@ -34,15 +34,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.AccountBalanceWallet
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.Handshake
-import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.NotificationsActive
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.QrCodeScanner
-import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -72,6 +68,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.util.CurrencyFormatter
 import com.fishflow.app.data.model.Order
@@ -85,8 +82,7 @@ fun SellerOrderListScreen(
     modifier: Modifier = Modifier,
     initialState: SellerOrderUiState = SellerOrderUiState(),
     onBack: () -> Unit = {},
-    onOrderClick: (Order) -> Unit = {},
-    onNavClick: (String) -> Unit = {}
+    onOrderClick: (Order) -> Unit = {}
 ) {
     var uiState by remember { mutableStateOf(initialState) }
     var dialogOrder by remember { mutableStateOf<Pair<Order, PendingOrderAction>?>(null) }
@@ -123,12 +119,9 @@ fun SellerOrderListScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
         topBar = {
-            SellerOrdersTopBar(onBack = onBack)
-        },
-        bottomBar = {
-            SellerFloatingCapsuleBottomBar(
-                activeItem = "Pesanan",
-                onItemClick = onNavClick
+            FishFlowTopBar(
+                title = "Ringkasan Pesanan",
+                onBack = onBack
             )
         }
     ) { innerPadding ->
@@ -161,7 +154,7 @@ fun SellerOrderListScreen(
             if (incomingOrders.isNotEmpty()) {
                 item {
                     SectionHeaderRow(
-                        icon = Icons.Rounded.ReceiptLong,
+                        icon = Icons.AutoMirrored.Rounded.ReceiptLong,
                         title = "Pesanan Masuk",
                         badgeText = "Batas: 15 menit",
                         badgeBg = OrderDesignTokens.ErrorBg,
@@ -211,7 +204,7 @@ fun SellerOrderListScreen(
             if (completedOrders.isNotEmpty()) {
                 item {
                     SectionHeaderRow(
-                        icon = Icons.Rounded.ReceiptLong,
+                        icon = Icons.AutoMirrored.Rounded.ReceiptLong,
                         title = "Pesanan Selesai",
                         badgeText = "${completedOrders.size} transaksi",
                         badgeBg = OrderDesignTokens.SurfaceContainer,
@@ -307,63 +300,6 @@ fun SellerOrderListScreen(
                 }
             }
         )
-    }
-}
-
-@Composable
-private fun SellerOrdersTopBar(onBack: () -> Unit) {
-    Surface(
-        color = OrderDesignTokens.CanvasBg.copy(alpha = 0.94f),
-        shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .height(64.dp)
-                .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Kembali",
-                        tint = OrderDesignTokens.TextPrimary
-                    )
-                }
-                Image(
-                    painter = painterResource(id = R.drawable.img_fishflow_logo),
-                    contentDescription = "Fish Flow",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(28.dp)
-                )
-                Text(
-                    text = "Ringkasan Pesanan",
-                    color = OrderDesignTokens.TextPrimary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Image(
-                painter = painterResource(id = R.drawable.img_profile_buyer),
-                contentDescription = "Profil Penjual",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .padding(end = 4.dp)
-                    .size(32.dp)
-                    .clip(CircleShape)
-            )
-        }
     }
 }
 
@@ -662,7 +598,7 @@ private fun DailyTransactionRecapCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.ReceiptLong,
+                    imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
                     contentDescription = null,
                     tint = OrderDesignTokens.CoastalTeal,
                     modifier = Modifier.size(20.dp)
@@ -690,100 +626,6 @@ private fun DailyTransactionRecapCard(
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End
         )
-    }
-}
-
-@Composable
-private fun SellerFloatingCapsuleBottomBar(
-    activeItem: String,
-    onItemClick: (String) -> Unit
-) {
-    Surface(
-        color = OrderDesignTokens.MaritimeDark,
-        shadowElevation = 10.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(64.dp)
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SellerBottomIcon(
-                icon = Icons.Rounded.ReceiptLong,
-                label = "Pesanan",
-                selected = activeItem == "Pesanan",
-                onClick = { onItemClick("Pesanan") }
-            )
-            SellerBottomIcon(
-                icon = Icons.Rounded.Inventory2,
-                label = "Stok",
-                selected = activeItem == "Stok",
-                onClick = { onItemClick("Stok") }
-            )
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(OrderDesignTokens.CoastalTeal)
-                    .clickable { onItemClick("Scanner") },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.QrCodeScanner,
-                    contentDescription = "Scanner Dermaga",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            SellerBottomIcon(
-                icon = Icons.Rounded.AccountBalanceWallet,
-                label = "Dompet",
-                selected = activeItem == "Dompet",
-                onClick = { onItemClick("Dompet") }
-            )
-            SellerBottomIcon(
-                icon = Icons.Rounded.Person,
-                label = "Profil",
-                selected = activeItem == "Profil",
-                onClick = { onItemClick("Profil") }
-            )
-        }
-    }
-}
-
-@Composable
-private fun SellerBottomIcon(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (selected) OrderDesignTokens.MintAccent else OrderDesignTokens.SageMuted,
-            modifier = Modifier.size(20.dp)
-        )
-        if (selected) {
-            Box(
-                modifier = Modifier
-                    .size(4.dp)
-                    .clip(CircleShape)
-                    .background(OrderDesignTokens.MintAccent)
-            )
-        }
     }
 }
 

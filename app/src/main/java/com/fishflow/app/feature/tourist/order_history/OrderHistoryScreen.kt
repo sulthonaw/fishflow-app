@@ -27,7 +27,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ReceiptLong
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,7 +46,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.FishFlowBottomBar
+import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
+import com.fishflow.app.core.ui.components.TouristBottomBarItems
 import com.fishflow.app.data.model.Order
 import com.fishflow.app.data.model.OrderItem
 import com.fishflow.app.data.model.OrderStatus
@@ -83,12 +86,16 @@ fun OrderHistoryScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
         topBar = {
-            TrackingBrandHeader(title = "Riwayat Pesanan")
+            FishFlowTopBar(
+                title = "Riwayat Pesanan",
+                showBrand = true
+            )
         },
         bottomBar = {
-            TouristOrderBottomBar(
-                activeTab = "Pesanan",
-                onTabClick = onNavItemClick
+            FishFlowBottomBar(
+                items = TouristBottomBarItems,
+                currentRoute = "Pesanan",
+                onNavigate = onNavItemClick
             )
         }
     ) { innerPadding ->
@@ -205,7 +212,7 @@ private fun OrderHistoryEmptyState(tab: OrderHistoryTab) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Rounded.ReceiptLong,
+                imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
                 contentDescription = null,
                 tint = OrderDesignTokens.CoastalTeal,
                 modifier = Modifier.size(30.dp)

@@ -1,4 +1,4 @@
-﻿// FishFlowBottomBar.kt
+// FishFlowBottomBar.kt
 // Developer: Octavia
 //
 // Koneksi: Bottom nav muncul di beranda wisatawan (screen Octavia)
@@ -25,8 +25,13 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Dashboard
+import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Inventory2
+import androidx.compose.material.icons.rounded.Landscape
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Storefront
 import androidx.compose.material3.Icon
@@ -60,6 +65,17 @@ val TouristBottomBarItems: List<FishFlowBottomBarItem> = listOf(
         label = "Pesanan",
         icon = Icons.AutoMirrored.Rounded.ReceiptLong
     ),
+    FishFlowBottomBarItem(route = "Profil", label = "Profil", icon = Icons.Rounded.Person)
+)
+
+val SellerBottomBarItems: List<FishFlowBottomBarItem> = listOf(
+    FishFlowBottomBarItem(route = "Dashboard", label = "Dashboard", icon = Icons.Rounded.Dashboard),
+    FishFlowBottomBarItem(route = "Stok", label = "Stok", icon = Icons.Rounded.Inventory2),
+    FishFlowBottomBarItem(route = "Profil", label = "Profil", icon = Icons.Rounded.Person)
+)
+
+val AdminBottomBarItems: List<FishFlowBottomBarItem> = listOf(
+    FishFlowBottomBarItem(route = "Dashboard", label = "Dashboard", icon = Icons.Rounded.Dashboard),
     FishFlowBottomBarItem(route = "Profil", label = "Profil", icon = Icons.Rounded.Person)
 )
 

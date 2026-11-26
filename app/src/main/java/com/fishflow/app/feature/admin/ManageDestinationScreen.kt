@@ -1,4 +1,4 @@
-﻿package com.fishflow.app.feature.admin
+package com.fishflow.app.feature.admin
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,11 +15,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,11 +29,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fishflow.app.core.ui.components.AdminBottomBarItems
+import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.FishFlowBottomBar
+import com.fishflow.app.core.ui.components.FishFlowTopBar
+import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.data.model.Activity
 import com.fishflow.app.data.model.Destination
 import com.fishflow.app.feature.tourist.budget.formatRupiah
@@ -71,108 +79,120 @@ fun ManageDestinationScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        TextButton(onClick = onBack) {
-            Text("Kembali")
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = OrderDesignTokens.CanvasBg,
+        topBar = {
+            FishFlowTopBar(
+                title = "Kelola Destinasi",
+                onBack = onBack
+            )
         }
-
-        Text(
-            text = "Kelola Destinasi",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "Tambah destinasi, atur aktivitas, dan perbarui komponen biaya.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            Button(onClick = onAddDestination) {
-                Text("Tambah Destinasi")
-            }
-            TextButton(onClick = onRefresh) {
-                Text("Muat ulang")
-            }
-        }
-
-        uiState.successMessage?.let { message ->
-            MessageRow(
-                message = message,
-                isError = false,
-                onDismiss = onDismissMessage
+            CoastalHeroHeader(
+                badgeText = "Konten Wisata",
+                title = "Kelola Destinasi",
+                subtitle = "Tambah destinasi, atur aktivitas, dan perbarui komponen biaya."
             )
-        }
-        uiState.errorMessage?.let { message ->
-            MessageRow(
-                message = message,
-                isError = true,
-                onDismiss = onDismissMessage
-            )
-        }
 
-        Spacer(Modifier.height(8.dp))
-
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            uiState.destinations.isEmpty() -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Belum ada destinasi",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "Tambahkan destinasi pertama lewat tombol di atas.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(uiState.destinations, key = { it.id }) { destination ->
-                        DestinationAdminCard(
-                            destination = destination,
-                            activities = uiState.activitiesFor(destination.id),
-                            expanded = destination.id in uiState.expandedDestinationIds,
-                            onToggleExpanded = { onToggleExpanded(destination.id) },
-                            onEdit = { onEditDestination(destination) },
-                            onDelete = { onDeleteDestination(destination) },
-                            onAddActivity = { onAddActivity(destination.id) },
-                            onEditActivity = onEditActivity,
-                            onDeleteActivity = onDeleteActivity
+                    Button(
+                        onClick = onAddDestination,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = OrderDesignTokens.CoastalTeal,
+                            contentColor = Color.White
                         )
+                    ) {
+                        Text("Tambah Destinasi")
+                    }
+                    TextButton(onClick = onRefresh) {
+                        Text("Muat ulang", color = OrderDesignTokens.CoastalTeal)
+                    }
+                }
+
+                uiState.successMessage?.let { message ->
+                    MessageRow(
+                        message = message,
+                        isError = false,
+                        onDismiss = onDismissMessage
+                    )
+                }
+                uiState.errorMessage?.let { message ->
+                    MessageRow(
+                        message = message,
+                        isError = true,
+                        onDismiss = onDismissMessage
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = OrderDesignTokens.CoastalTeal)
+                        }
+                    }
+
+                    uiState.destinations.isEmpty() -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Belum ada destinasi",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "Tambahkan destinasi pertama lewat tombol di atas.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(uiState.destinations, key = { it.id }) { destination ->
+                                DestinationAdminCard(
+                                    destination = destination,
+                                    activities = uiState.activitiesFor(destination.id),
+                                    expanded = destination.id in uiState.expandedDestinationIds,
+                                    onToggleExpanded = { onToggleExpanded(destination.id) },
+                                    onEdit = { onEditDestination(destination) },
+                                    onDelete = { onDeleteDestination(destination) },
+                                    onAddActivity = { onAddActivity(destination.id) },
+                                    onEditActivity = onEditActivity,
+                                    onDeleteActivity = onDeleteActivity
+                                )
+                            }
+                        }
                     }
                 }
             }
