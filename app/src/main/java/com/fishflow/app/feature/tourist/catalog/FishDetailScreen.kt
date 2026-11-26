@@ -241,6 +241,7 @@ private fun DetailHero(product: FishProduct) {
         FishProductImage(
             namaIkan = product.namaIkan,
             imageRes = product.imageRes,
+            fotoUrl = product.fotoUrl,
             modifier = Modifier.fillMaxSize()
         )
         Box(

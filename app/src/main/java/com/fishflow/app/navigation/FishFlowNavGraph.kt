@@ -1,5 +1,6 @@
 package com.fishflow.app.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -353,6 +354,8 @@ fun FishFlowNavGraph(
                     onBrowseCatalog = {
                         navController.navigate(Screen.FishCatalog.createRoute())
                     },
+                    onUpdateQuantity = cartViewModel::onUpdateQuantity,
+                    onRemoveItem = cartViewModel::onRemoveItem,
                     onProceedToCheckout = { updatedCart ->
                         val orderItems = updatedCart.items.mapIndexed { idx, item ->
                             OrderItem(
@@ -433,10 +436,23 @@ fun FishFlowNavGraph(
                 LaunchedEffect(orderId) {
                     trackingViewModel.observeOrder(orderId)
                 }
-                OrderTrackingScreen(
-                    initialOrder = trackingState.order ?: sampleTrackingOrder(),
-                    onBack = { navController.popBackStack() }
-                )
+                val loadedOrder = trackingState.order
+                if (loadedOrder == null && trackingState.isLoading) {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                } else if (loadedOrder != null) {
+                    OrderTrackingScreen(
+                        initialOrder = loadedOrder,
+                        isRefreshing = trackingState.isLoading,
+                        onRefresh = { trackingViewModel.observeOrder(orderId) },
+                        onCancelOrder = trackingViewModel::cancelOrder,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
             }
 
             composable(Screen.TouristProfile.route) {
@@ -554,13 +570,23 @@ fun FishFlowNavGraph(
                 LaunchedEffect(orderId) {
                     detailViewModel.observeOrder(orderId)
                 }
-                SellerOrderDetailScreen(
-                    initialOrder = detailState.order ?: SellerOrderUiState.sampleSellerOrders().first(),
-                    onBack = { navController.popBackStack() },
-                    onConfirmOrder = detailViewModel::onConfirmOrder,
-                    onRejectOrder = detailViewModel::onRejectOrder,
-                    onCompleteOrder = detailViewModel::onCompleteOrder
-                )
+                val detailOrder = detailState.order
+                if (detailOrder == null && detailState.isLoading) {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                } else if (detailOrder != null) {
+                    SellerOrderDetailScreen(
+                        initialOrder = detailOrder,
+                        onBack = { navController.popBackStack() },
+                        onConfirmOrder = detailViewModel::onConfirmOrder,
+                        onRejectOrder = detailViewModel::onRejectOrder,
+                        onCompleteOrder = detailViewModel::onCompleteOrder
+                    )
+                }
             }
 
             composable(Screen.SellerProfile.route) {

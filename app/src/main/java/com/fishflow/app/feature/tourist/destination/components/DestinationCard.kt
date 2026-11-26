@@ -1,4 +1,4 @@
-﻿package com.fishflow.app.feature.tourist.destination.components
+package com.fishflow.app.feature.tourist.destination.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,7 +46,10 @@ fun DestinationCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DestinationPhotoPlaceholder(destination.nama)
+            DestinationPhotoPlaceholder(
+                nama = destination.nama,
+                fotoUrl = destination.fotoUrl
+            )
             Spacer(Modifier.width(12.dp))
             Column(
                 modifier = Modifier.weight(1f),
@@ -83,26 +86,40 @@ fun DestinationCard(
 }
 
 @Composable
-private fun DestinationPhotoPlaceholder(nama: String) {
-    Box(
-        modifier = Modifier
-            .size(88.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        MaterialTheme.colorScheme.secondaryContainer
-                    )
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = nama.take(1).uppercase(),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+private fun DestinationPhotoPlaceholder(
+    nama: String,
+    fotoUrl: String? = null
+) {
+    if (!fotoUrl.isNullOrBlank()) {
+        coil.compose.AsyncImage(
+            model = fotoUrl,
+            contentDescription = nama,
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier
+                .size(88.dp)
+                .clip(RoundedCornerShape(16.dp))
         )
+    } else {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = nama.take(1).uppercase(),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
     }
 }
