@@ -89,7 +89,7 @@ fun InventoryScreen(
                 CoastalHeroHeader(
                     badgeText = "Manajemen Stok",
                     title = "Inventory Tangkapan",
-                    subtitle = "Kelola ketersediaan stok dan tarik dari atas untuk memperbarui."
+                    subtitle = "Pantau stok dan status jual hasil tangkapan Anda."
                 )
 
                 Column(

@@ -76,7 +76,7 @@ fun UpdatePriceScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             CoastalHeroHeader(
-                badgeText = "ID Produk: ${uiState.productId}",
+                badgeText = "Atur Harga Jual",
                 title = uiState.namaIkan,
                 subtitle = "Perbarui harga jual per kilogram untuk etalase wisatawan."
             )

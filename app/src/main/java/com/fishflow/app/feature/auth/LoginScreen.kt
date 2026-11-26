@@ -92,7 +92,6 @@ fun LoginScreen(
         uiState = uiState,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
-        onSelectDemoRole = viewModel::fillDemoAccount,
         onLoginClick = viewModel::onLoginClick,
         onRegisterClick = onRegisterClick,
         modifier = modifier
@@ -104,7 +103,6 @@ private fun LoginContent(
     uiState: LoginUiState,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onSelectDemoRole: (UserRole) -> Unit,
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -150,7 +148,7 @@ private fun LoginContent(
                             letterSpacing = 0.8.sp
                         )
                         Text(
-                            text = "Ekosistem Pesisir & Perikanan",
+                            text = "Ikan Segar Langsung dari Nelayan",
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
@@ -159,7 +157,7 @@ private fun LoginContent(
                 }
 
                 Text(
-                    text = "Masuk ke akun Anda untuk memesan ikan segar langsung dari kapal, mengelola tangkapan, atau mengatur destinasi wisata.",
+                    text = "Masuk untuk memesan ikan segar di dermaga, mencatat tangkapan, atau mengelola wisata pantai.",
                     color = OrderDesignTokens.SageLight,
                     fontSize = 13.sp,
                     lineHeight = 18.sp
@@ -194,7 +192,7 @@ private fun LoginContent(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Gunakan akun terdaftar atau pilih akses demo di bawah",
+                            text = "Masukkan email dan password akun Anda.",
                             color = OrderDesignTokens.TextSecondary,
                             fontSize = 12.sp
                         )
@@ -295,35 +293,6 @@ private fun LoginContent(
                             Text("Masuk", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = "Isi Cepat Akun Demo (Per Role):",
-                            color = OrderDesignTokens.TextMuted,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            DemoRoleChip(
-                                label = "Wisatawan",
-                                onClick = { onSelectDemoRole(UserRole.WISATAWAN) },
-                                modifier = Modifier.weight(1f)
-                            )
-                            DemoRoleChip(
-                                label = "Penjual",
-                                onClick = { onSelectDemoRole(UserRole.PENJUAL) },
-                                modifier = Modifier.weight(1f)
-                            )
-                            DemoRoleChip(
-                                label = "Admin",
-                                onClick = { onSelectDemoRole(UserRole.ADMIN) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
                 }
             }
 
@@ -350,29 +319,6 @@ private fun LoginContent(
     }
 }
 
-@Composable
-private fun DemoRoleChip(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(OrderDesignTokens.MintAccent.copy(alpha = 0.35f))
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            color = OrderDesignTokens.CoastalTealDark,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
@@ -381,7 +327,6 @@ private fun LoginScreenPreview() {
             uiState = LoginUiState(),
             onEmailChange = {},
             onPasswordChange = {},
-            onSelectDemoRole = {},
             onLoginClick = {},
             onRegisterClick = {}
         )

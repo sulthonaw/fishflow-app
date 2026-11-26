@@ -85,7 +85,7 @@ fun DestinationListScreen(
             CoastalHeroHeader(
                 badgeText = "Rencana Wisata Bahari",
                 title = "Destinasi Wisata",
-                subtitle = "Temukan pantai dan aktivitas pesisir untuk rencana liburanmu."
+                subtitle = "Pilih destinasi pantai dan rencanakan aktivitas liburan Anda."
             )
 
             Column(

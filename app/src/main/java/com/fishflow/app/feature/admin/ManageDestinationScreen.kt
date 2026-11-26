@@ -129,7 +129,7 @@ fun ManageDestinationScreen(
             CoastalHeroHeader(
                 badgeText = "Konten Wisata",
                 title = "Kelola Destinasi",
-                subtitle = "Tambah destinasi, atur aktivitas, dan tarik dari atas untuk memuat ulang."
+                subtitle = "Tambah destinasi dan atur daftar aktivitas wisata pantai."
             )
 
             Column(

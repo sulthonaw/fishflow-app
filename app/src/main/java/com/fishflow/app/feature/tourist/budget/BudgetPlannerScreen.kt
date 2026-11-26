@@ -66,7 +66,7 @@ fun BudgetPlannerScreen(
             CoastalHeroHeader(
                 badgeText = "Perencanaan Biaya",
                 title = uiState.destinationName.ifBlank { "Estimasi Anggaran" },
-                subtitle = "Centang aktivitas untuk melihat perkiraan biaya wisatamu."
+                subtitle = "Pilih aktivitas yang ingin diikuti untuk menghitung perkiraan biaya."
             )
 
             Column(

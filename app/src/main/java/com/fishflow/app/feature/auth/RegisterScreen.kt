@@ -159,13 +159,13 @@ private fun RegisterContent(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Bergabung dengan FishFlow",
+                        text = "Buat Akun FishFlow",
                         color = Color.White,
                         fontSize = 21.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Pilih peran Anda untuk langsung menjelajahi alur aplikasi.",
+                        text = "Pilih peran yang sesuai dengan kebutuhan Anda di FishFlow.",
                         color = OrderDesignTokens.SageLight,
                         fontSize = 13.sp
                     )
