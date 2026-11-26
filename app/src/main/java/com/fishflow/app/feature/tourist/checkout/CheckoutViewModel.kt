@@ -26,17 +26,19 @@ class CheckoutViewModel(
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
 
     fun setOrderItems(items: List<OrderItem>, pickupPoint: String = "Dermaga TPI") {
+        _uiState.update {
+            it.copy(
+                orderItems = items,
+                pickupPoint = pickupPoint,
+                isOrderCreated = false,
+                errorMessage = null,
+                orderId = null
+            )
+        }
         viewModelScope.launch {
             val user = authRepository.getCurrentUser()
-            _uiState.update {
-                it.copy(
-                    buyerName = user?.nama ?: it.buyerName,
-                    orderItems = items,
-                    pickupPoint = pickupPoint,
-                    isOrderCreated = false,
-                    errorMessage = null,
-                    orderId = null
-                )
+            if (user != null) {
+                _uiState.update { it.copy(buyerName = user.nama) }
             }
         }
     }

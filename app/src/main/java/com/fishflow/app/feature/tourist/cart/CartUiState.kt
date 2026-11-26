@@ -27,7 +27,8 @@ data class CartItem(
 
 data class CartUiState(
     val items: List<CartItem> = sampleCartItems(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 ) {
     val isEmpty: Boolean
         get() = items.isEmpty()

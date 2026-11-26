@@ -348,6 +348,10 @@ fun FishFlowNavGraph(
 
             composable(Screen.Cart.route) {
                 val cartState by cartViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = cartState.errorMessage,
+                    onConsumed = cartViewModel::clearError
+                )
                 CartScreen(
                     initialState = cartState,
                     onBack = { navController.popBackStack() },

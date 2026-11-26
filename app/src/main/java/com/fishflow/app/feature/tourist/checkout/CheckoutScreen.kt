@@ -87,6 +87,9 @@ fun CheckoutScreen(
 ) {
     ErrorToastEffect(errorMessage = initialState.errorMessage)
     var uiState by remember { mutableStateOf(initialState) }
+    androidx.compose.runtime.LaunchedEffect(initialState) {
+        uiState = initialState
+    }
     val primaryItem = uiState.primaryItem
     val currentQty = primaryItem?.qty?.toInt() ?: 1
     val maxStock = primaryItem?.availableStockKg?.toInt() ?: 18

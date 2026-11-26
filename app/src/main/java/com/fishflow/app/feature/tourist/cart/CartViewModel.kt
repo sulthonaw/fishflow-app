@@ -3,6 +3,7 @@ package com.fishflow.app.feature.tourist.cart
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fishflow.app.R
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.repository.AuthRepository
 import com.fishflow.app.data.repository.AuthRepositoryImpl
@@ -31,13 +32,26 @@ class CartViewModel(
 
     fun loadCart() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = it.items.isEmpty(), errorMessage = null) }
             val user = authRepository.getCurrentUser()
             if (user == null) {
                 _uiState.update { it.copy(items = emptyList(), isLoading = false) }
                 return@launch
             }
-            val remoteCart = orderRepository.getCartItems(user.id).getOrDefault(emptyList())
+            val remoteResult = orderRepository.getCartItems(user.id)
+            if (remoteResult.isFailure) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = ErrorMessageMapper.from(
+                            remoteResult.exceptionOrNull(),
+                            "Gagal memuat keranjang."
+                        )
+                    )
+                }
+                return@launch
+            }
+            val remoteCart = remoteResult.getOrDefault(emptyList())
             val products = runCatching { productRepository.getActiveProducts() }
                 .getOrDefault(emptyList())
                 .associateBy { it.id }
@@ -60,14 +74,46 @@ class CartViewModel(
     }
 
     fun onAddItem(product: FishProduct, qtyKg: Int) {
+        val maxStock = product.stokTersedia.toInt().coerceAtLeast(1)
+        val existing = _uiState.value.items.firstOrNull { it.productId == product.id }
+        val targetQty = ((existing?.qty ?: 0) + qtyKg)
+            .coerceAtLeast(1)
+            .coerceAtMost(maxStock)
+
+        val optimisticItem = CartItem(
+            productId = product.id,
+            namaIkan = product.namaIkan,
+            vesselName = product.namaKapal?.ifBlank { product.namaPenjual } ?: product.namaPenjual,
+            qty = targetQty,
+            hargaSatuan = product.hargaPerKg,
+            availableStockKg = maxStock,
+            badgeLabel = product.kategori.label,
+            imageRes = product.imageRes ?: R.drawable.img_tuna_super
+        )
+
+        // Update state secara langsung agar langsung tampil di CartScreen tanpa jeda kosong.
+        _uiState.update { state ->
+            val remaining = state.items.filterNot { it.productId == product.id }
+            state.copy(
+                items = listOf(optimisticItem) + remaining,
+                isLoading = false,
+                errorMessage = null
+            )
+        }
+
         viewModelScope.launch {
             val user = authRepository.getCurrentUser() ?: return@launch
-            val existing = _uiState.value.items.firstOrNull { it.productId == product.id }
-            val targetQty = ((existing?.qty ?: 0) + qtyKg)
-                .coerceAtLeast(1)
-                .coerceAtMost(product.stokTersedia.toInt().coerceAtLeast(1))
             orderRepository.upsertCartItem(user.id, product.id, targetQty.toDouble())
-            loadCart()
+                .onFailure { err ->
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = ErrorMessageMapper.from(
+                                err,
+                                "Gagal menyimpan item ke keranjang."
+                            )
+                        )
+                    }
+                }
         }
     }
 
@@ -76,30 +122,50 @@ class CartViewModel(
             onRemoveItem(productId)
             return
         }
+        _uiState.update { state ->
+            state.copy(
+                items = state.items.map { item ->
+                    if (item.productId == productId) item.copy(qty = newQty) else item
+                }
+            )
+        }
         viewModelScope.launch {
-            val user = authRepository.getCurrentUser()
-            _uiState.update { state ->
-                state.copy(
-                    items = state.items.map { item ->
-                        if (item.productId == productId) item.copy(qty = newQty) else item
+            val user = authRepository.getCurrentUser() ?: return@launch
+            orderRepository.upsertCartItem(user.id, productId, newQty.toDouble())
+                .onFailure { err ->
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = ErrorMessageMapper.from(
+                                err,
+                                "Gagal memperbarui jumlah pesanan."
+                            )
+                        )
                     }
-                )
-            }
-            if (user != null) {
-                orderRepository.upsertCartItem(user.id, productId, newQty.toDouble())
-            }
+                }
         }
     }
 
     fun onRemoveItem(productId: String) {
-        viewModelScope.launch {
-            val user = authRepository.getCurrentUser()
-            _uiState.update { state ->
-                state.copy(items = state.items.filterNot { it.productId == productId })
-            }
-            if (user != null) {
-                orderRepository.removeCartItem(user.id, productId)
-            }
+        _uiState.update { state ->
+            state.copy(items = state.items.filterNot { it.productId == productId })
         }
+        viewModelScope.launch {
+            val user = authRepository.getCurrentUser() ?: return@launch
+            orderRepository.removeCartItem(user.id, productId)
+                .onFailure { err ->
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = ErrorMessageMapper.from(
+                                err,
+                                "Gagal menghapus item dari keranjang."
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 }

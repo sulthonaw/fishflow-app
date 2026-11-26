@@ -77,6 +77,7 @@ fun CartScreen(
         uiState = initialState
     }
     val stockErrors = uiState.stockErrors
+    com.fishflow.app.core.ui.components.ErrorToastEffect(errorMessage = uiState.errorMessage)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -104,7 +105,16 @@ fun CartScreen(
         ) {
             CartHeroBanner(itemCount = uiState.items.size)
 
-            if (uiState.isEmpty) {
+            if (uiState.isLoading && uiState.isEmpty) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        color = OrderDesignTokens.CoastalTeal
+                    )
+                }
+            } else if (uiState.isEmpty) {
                 CartEmptyState(
                     onBrowseCatalog = onBrowseCatalog,
                     onRestoreSample = { uiState = CartUiState() }
