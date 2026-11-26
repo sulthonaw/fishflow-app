@@ -53,4 +53,14 @@ class ErrorMessageMapperTest {
 
         assertEquals("Harga harus lebih dari Rp0.", result)
     }
+
+    @Test
+    fun mapsRateLimitToFriendlyMessage() {
+        val result = ErrorMessageMapper.sanitize(
+            "over_email_send_rate_limit (429 Too Many Requests)",
+            fallback = "Pendaftaran gagal."
+        )
+
+        assertEquals("Terlalu banyak percobaan. Silakan tunggu beberapa menit lalu coba lagi.", result)
+    }
 }

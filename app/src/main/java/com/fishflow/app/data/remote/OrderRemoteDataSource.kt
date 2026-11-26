@@ -29,14 +29,14 @@ data class RemoteCartItemDto(
     val id: String = "",
     @SerialName("buyer_id") val buyerId: String = "",
     @SerialName("product_id") val productId: String = "",
-    @SerialName("qty_kg") val qtyKg: Double = 0.0
+    @SerialName("qty") val qtyKg: Double = 0.0
 )
 
 @Serializable
 private data class UpsertCartItemPayload(
     @SerialName("buyer_id") val buyerId: String,
     @SerialName("product_id") val productId: String,
-    @SerialName("qty_kg") val qtyKg: Double
+    @SerialName("qty") val qtyKg: Double
 )
 
 @Serializable
