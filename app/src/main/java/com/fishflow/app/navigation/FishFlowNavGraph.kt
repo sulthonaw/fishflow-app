@@ -651,7 +651,6 @@ fun FishFlowNavGraph(
             composable(Screen.AdminDashboard.route) {
                 AdminDashboardScreen(
                     onManageDestinations = { navController.navigate(Screen.ManageDestinations.route) },
-                    onManageActivities = { navController.navigate(Screen.ManageDestinations.route) },
                     onManageUsers = { navController.navigate(Screen.ManageUsers.route) },
                     onNavItemClick = onAdminBottomNav
                 )
