@@ -61,6 +61,10 @@ fun SellerDashboardScreen(
         onConsumed = viewModel::clearError
     )
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadDashboard()
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,

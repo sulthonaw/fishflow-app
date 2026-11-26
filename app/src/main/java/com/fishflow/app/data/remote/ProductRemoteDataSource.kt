@@ -20,6 +20,7 @@ import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -390,6 +391,7 @@ class SupabaseProductRemoteDataSource(
             emitAll(changes.map { getAllProducts() })
         } finally {
             runCatching { channel.unsubscribe() }
+            runCatching { supabase.realtime.removeChannel(channel) }
         }
     }
 }

@@ -116,8 +116,7 @@ fun CartScreen(
                 }
             } else if (uiState.isEmpty) {
                 CartEmptyState(
-                    onBrowseCatalog = onBrowseCatalog,
-                    onRestoreSample = { uiState = CartUiState() }
+                    onBrowseCatalog = onBrowseCatalog
                 )
             } else {
                 LazyColumn(
@@ -213,8 +212,7 @@ private fun CartHeroBanner(itemCount: Int) {
 
 @Composable
 private fun CartEmptyState(
-    onBrowseCatalog: () -> Unit,
-    onRestoreSample: () -> Unit
+    onBrowseCatalog: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -254,10 +252,7 @@ private fun CartEmptyState(
         )
         Spacer(modifier = Modifier.height(20.dp))
         Button(
-            onClick = {
-                onRestoreSample()
-                onBrowseCatalog()
-            },
+            onClick = onBrowseCatalog,
             shape = RoundedCornerShape(9999.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = OrderDesignTokens.CoastalTeal,

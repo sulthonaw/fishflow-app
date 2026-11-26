@@ -16,6 +16,7 @@
 // - Realtime update — status berubah otomatis tanpa refresh
 package com.fishflow.app.feature.tourist.order_history
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,6 +55,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -97,6 +99,7 @@ fun OrderTrackingScreen(
     onWhatsAppSeller: () -> Unit = {}
 ) {
     var order by remember { mutableStateOf(initialOrder) }
+    var showCancelDialog by remember { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(initialOrder) {
         order = initialOrder
     }
@@ -163,12 +166,60 @@ fun OrderTrackingScreen(
                     onWhatsApp = onWhatsAppSeller
                 )
 
+                if (order.status == OrderStatus.MENUNGGU_KONFIRMASI) {
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = { showCancelDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(9999.dp),
+                        border = BorderStroke(1.dp, OrderDesignTokens.ErrorText),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = OrderDesignTokens.ErrorText
+                        )
+                    ) {
+                        Text(
+                            text = "Batalkan Pesanan",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
                 SatisfactionAssuranceCard()
 
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
         }
+    }
+
+    if (showCancelDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text(text = "Batalkan Pesanan?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Pesanan ${order.orderCode} akan dibatalkan dan stok ikan dikembalikan.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCancelDialog = false
+                        onCancelOrder(order.id)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = OrderDesignTokens.ErrorText
+                    )
+                ) {
+                    Text("Ya, Batalkan", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text("Kembali")
+                }
+            }
+        )
     }
 }
 

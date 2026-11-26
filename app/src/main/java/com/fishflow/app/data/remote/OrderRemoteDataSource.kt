@@ -13,6 +13,7 @@ import io.github.jan.supabase.postgrest.query.Order as PostgrestOrder
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -39,6 +40,11 @@ private data class UpsertCartItemPayload(
 )
 
 @Serializable
+private data class ProductNameJoinDto(
+    @SerialName("nama_ikan") val namaIkan: String = ""
+)
+
+@Serializable
 private data class OrderItemDto(
     val id: String = "",
     @SerialName("order_id") val orderId: String = "",
@@ -46,13 +52,14 @@ private data class OrderItemDto(
     @SerialName("nama_ikan") val namaIkan: String = "",
     val qty: Double = 0.0,
     @SerialName("harga_satuan") val hargaSatuan: Double = 0.0,
-    val subtotal: Double = 0.0
+    val subtotal: Double = 0.0,
+    val products: ProductNameJoinDto? = null
 ) {
     fun toDomain(): OrderItem = OrderItem(
         id = id,
         orderId = orderId,
         productId = productId,
-        namaIkan = namaIkan,
+        namaIkan = products?.namaIkan?.ifBlank { namaIkan } ?: namaIkan,
         qty = qty,
         hargaSatuan = hargaSatuan,
         subtotal = subtotal
@@ -117,7 +124,7 @@ class OrderRemoteDataSource(
     private val supabase: SupabaseClient = SupabaseClientProvider.client
 ) {
     private val orderSelectColumns = Columns.raw(
-        "*, order_items(*), buyer:profiles!orders_buyer_id_fkey(nama), seller:profiles!orders_seller_id_fkey(nama, seller_profiles(nama_kapal))"
+        "*, order_items(*, products(nama_ikan)), buyer:profiles!orders_buyer_id_fkey(nama), seller:profiles!orders_seller_id_fkey(nama, seller_profiles(nama_kapal))"
     )
 
     suspend fun getCartItems(buyerId: String): List<RemoteCartItemDto> {
@@ -252,6 +259,7 @@ class OrderRemoteDataSource(
             emitAll(changes.map { getOrderById(orderId) })
         } finally {
             runCatching { channel.unsubscribe() }
+            runCatching { supabase.realtime.removeChannel(channel) }
         }
     }
 
@@ -266,6 +274,7 @@ class OrderRemoteDataSource(
             emitAll(changes.map { getOrdersBySeller(sellerId) })
         } finally {
             runCatching { channel.unsubscribe() }
+            runCatching { supabase.realtime.removeChannel(channel) }
         }
     }
 
@@ -280,6 +289,7 @@ class OrderRemoteDataSource(
             emitAll(changes.map { getOrdersByBuyer(buyerId) })
         } finally {
             runCatching { channel.unsubscribe() }
+            runCatching { supabase.realtime.removeChannel(channel) }
         }
     }
 }

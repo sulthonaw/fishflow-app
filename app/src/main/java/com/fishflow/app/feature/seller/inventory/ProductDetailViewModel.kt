@@ -7,6 +7,7 @@ import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.model.ProductStatus
 import com.fishflow.app.data.repository.ProductRepository
+import com.fishflow.app.data.repository.ProductRepositoryImpl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,7 @@ data class ProductDetailUiState(
 )
 
 class ProductDetailViewModel(
-    private val repository: ProductRepository
+    private val repository: ProductRepository = ProductRepositoryImpl.supabase()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
