@@ -32,6 +32,20 @@ class LoginViewModel(
         )
     }
 
+    fun loginWithDevelopmentAccount(role: UserRole) {
+        val devEmail = when (role) {
+            UserRole.WISATAWAN -> "wisatawan@fishflow.com"
+            UserRole.PENJUAL -> "seller@fishflow.com"
+            UserRole.ADMIN -> "admin@fishflow.com"
+        }
+        _uiState.value = _uiState.value.copy(
+            email = devEmail,
+            password = "password123",
+            errorMessage = null
+        )
+        onLoginClick()
+    }
+
     fun onLoginClick() {
         val currentState = _uiState.value
         val emailError = ValidationUtils.validateEmail(currentState.email)
