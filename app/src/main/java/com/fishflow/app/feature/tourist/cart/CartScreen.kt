@@ -68,9 +68,14 @@ fun CartScreen(
     initialState: CartUiState = CartUiState(),
     onBack: () -> Unit = {},
     onBrowseCatalog: () -> Unit = {},
+    onUpdateQuantity: (String, Int) -> Unit = { _, _ -> },
+    onRemoveItem: (String) -> Unit = {},
     onProceedToCheckout: (CartUiState) -> Unit = {}
 ) {
     var uiState by remember { mutableStateOf(initialState) }
+    androidx.compose.runtime.LaunchedEffect(initialState) {
+        uiState = initialState
+    }
     val stockErrors = uiState.stockErrors
 
     Scaffold(
@@ -122,20 +127,23 @@ fun CartScreen(
                             badgeLabel = item.badgeLabel,
                             imageRes = item.imageRes,
                             onUpdateQty = { newQty ->
+                                val clamped = newQty.coerceAtLeast(1)
                                 uiState = uiState.copy(
                                     items = uiState.items.map { existing ->
                                         if (existing.productId == item.productId) {
-                                            existing.copy(qty = newQty.coerceAtLeast(1))
+                                            existing.copy(qty = clamped)
                                         } else {
                                             existing
                                         }
                                     }
                                 )
+                                onUpdateQuantity(item.productId, clamped)
                             },
                             onRemove = {
                                 uiState = uiState.copy(
                                     items = uiState.items.filterNot { it.productId == item.productId }
                                 )
+                                onRemoveItem(item.productId)
                             }
                         )
                     }

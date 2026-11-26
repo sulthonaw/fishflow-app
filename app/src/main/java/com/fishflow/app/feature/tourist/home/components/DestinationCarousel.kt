@@ -1,4 +1,4 @@
-﻿// DestinationCarousel.kt
+// DestinationCarousel.kt
 // Developer: Octavia
 // Section destinasi unggulan, tampil saat chip "Wisata Bahari" dipilih.
 // Tata letak sama dengan TodayCatchSection: grid 2 kolom.
@@ -43,10 +43,10 @@ fun DestinationCarousel(
             onClick = { onItemClick(destination) },
             modifier = cardModifier,
             image = {
-                // Destinasi belum punya foto, jadi memakai inisial seperti produk tanpa foto.
                 FishProductImage(
                     namaIkan = destination.nama,
                     imageRes = null,
+                    fotoUrl = destination.fotoUrl,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(128.dp)

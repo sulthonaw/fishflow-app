@@ -88,13 +88,18 @@ import com.fishflow.app.feature.tourist.order_history.components.PickupCodeCard
 fun OrderTrackingScreen(
     modifier: Modifier = Modifier,
     initialOrder: Order = sampleTrackingOrder(),
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
+    onCancelOrder: (String) -> Unit = {},
     onBack: () -> Unit = {},
     onOpenMaps: () -> Unit = {},
     onCallSeller: () -> Unit = {},
     onWhatsAppSeller: () -> Unit = {}
 ) {
     var order by remember { mutableStateOf(initialOrder) }
-    var isRefreshing by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(initialOrder) {
+        order = initialOrder
+    }
     val primaryItem = order.items.firstOrNull()
     val showPickupCode = order.status == OrderStatus.SIAP_DIAMBIL || order.status == OrderStatus.SELESAI
 
@@ -110,18 +115,7 @@ fun OrderTrackingScreen(
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = {
-                isRefreshing = true
-                val nextStatus = when (order.status) {
-                    OrderStatus.MENUNGGU_KONFIRMASI -> OrderStatus.DIKONFIRMASI
-                    OrderStatus.DIKONFIRMASI -> OrderStatus.SIAP_DIAMBIL
-                    OrderStatus.SIAP_DIAMBIL -> OrderStatus.SELESAI
-                    OrderStatus.SELESAI -> OrderStatus.SIAP_DIAMBIL
-                    else -> order.status
-                }
-                order = order.copy(status = nextStatus)
-                isRefreshing = false
-            },
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)

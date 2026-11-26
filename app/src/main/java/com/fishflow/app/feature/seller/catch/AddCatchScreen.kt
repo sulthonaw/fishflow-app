@@ -62,6 +62,7 @@ fun AddCatchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     ErrorToastEffect(
         errorMessage = uiState.errorMessage,
@@ -254,7 +255,14 @@ fun AddCatchScreen(
                 }
 
                 Button(
-                    onClick = viewModel::onSaveCatch,
+                    onClick = {
+                        val bytes = uiState.fotoUri?.let { uri ->
+                            runCatching {
+                                context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                            }.getOrNull()
+                        }
+                        viewModel.onSaveCatch(fotoBytes = bytes)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),

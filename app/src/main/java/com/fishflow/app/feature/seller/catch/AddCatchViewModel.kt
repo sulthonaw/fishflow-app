@@ -9,6 +9,8 @@ import com.fishflow.app.data.repository.AuthRepository
 import com.fishflow.app.data.repository.AuthRepositoryImpl
 import com.fishflow.app.data.repository.FishCatchRepository
 import com.fishflow.app.data.repository.FishCatchRepositoryImpl
+import com.fishflow.app.data.repository.StorageRepository
+import com.fishflow.app.data.repository.StorageRepositoryImpl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +18,8 @@ import kotlinx.coroutines.launch
 
 class AddCatchViewModel(
     private val authRepository: AuthRepository = AuthRepositoryImpl(),
-    private val fishCatchRepository: FishCatchRepository = FishCatchRepositoryImpl()
+    private val fishCatchRepository: FishCatchRepository = FishCatchRepositoryImpl(),
+    private val storageRepository: StorageRepository = StorageRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddCatchUiState())
@@ -96,7 +99,10 @@ class AddCatchViewModel(
                 tanggalError == null
     }
 
-    fun onSaveCatch() {
+    fun onSaveCatch(
+        fotoBytes: ByteArray? = null,
+        fileName: String = "catch.jpg"
+    ) {
         if (_uiState.value.isLoading) return
 
         if (!validateForm()) return
@@ -114,6 +120,16 @@ class AddCatchViewModel(
                 val state = _uiState.value
                 val beratValue = state.berat.replace(",", ".").toDouble()
 
+                val uploadedFotoUrl = if (fotoBytes != null && fotoBytes.isNotEmpty()) {
+                    storageRepository.uploadCatchPhoto(
+                        sellerId = seller.id,
+                        imageBytes = fotoBytes,
+                        fileName = fileName
+                    ).getOrThrow()
+                } else {
+                    state.fotoUri?.toString()
+                }
+
                 fishCatchRepository.recordCatch(
                     FishCatch(
                         id = "",
@@ -121,7 +137,7 @@ class AddCatchViewModel(
                         namaIkan = state.jenisIkan.trim(),
                         beratKg = beratValue,
                         tanggalTangkap = state.tanggalTangkap.trim(),
-                        fotoUrl = state.fotoUri?.toString()
+                        fotoUrl = uploadedFotoUrl
                     )
                 ).getOrThrow()
 

@@ -1,4 +1,4 @@
-﻿// TodayCatchSection.kt
+// TodayCatchSection.kt
 // Developer: Octavia
 // Section "Hasil Tangkapan Hari Ini" — grid 2 kolom produk ikan sesuai Figma.
 // Stateless — terima List<FishProduct> dan onProductClick.
@@ -73,6 +73,7 @@ private fun TodayCatchImage(product: FishProduct) {
         FishProductImage(
             namaIkan = product.namaIkan,
             imageRes = product.imageRes,
+            fotoUrl = product.fotoUrl,
             modifier = Modifier.fillMaxSize()
         )
         Text(

@@ -1,4 +1,4 @@
-﻿// FishProductCard.kt
+// FishProductCard.kt
 // Developer: Octavia
 // Kartu produk ikan di katalog. Stateless.
 // Tampilkan: foto + kategori, nama ikan, penjual, lokasi pengambilan, stok tersedia,
@@ -42,6 +42,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.util.Constants
 import com.fishflow.app.core.util.CurrencyFormatter
@@ -111,6 +112,7 @@ private fun ProductThumbnail(product: FishProduct) {
         FishProductImage(
             namaIkan = product.namaIkan,
             imageRes = product.imageRes,
+            fotoUrl = product.fotoUrl,
             modifier = Modifier.fillMaxSize()
         )
         Text(
@@ -206,26 +208,38 @@ internal fun ProductPrice(hargaPerKg: Double, fontSize: Int, modifier: Modifier 
 internal fun FishProductImage(
     namaIkan: String,
     @DrawableRes imageRes: Int?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fotoUrl: String? = null
 ) {
-    if (imageRes != null) {
-        Image(
-            painter = painterResource(id = imageRes),
-            contentDescription = namaIkan,
-            contentScale = ContentScale.Crop,
-            modifier = modifier
-        )
-    } else {
-        Box(
-            modifier = modifier.background(OrderDesignTokens.MintAccent),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = namaIkan.take(1).uppercase(),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = OrderDesignTokens.MaritimeDark
+    when {
+        !fotoUrl.isNullOrBlank() -> {
+            AsyncImage(
+                model = fotoUrl,
+                contentDescription = namaIkan,
+                contentScale = ContentScale.Crop,
+                modifier = modifier
             )
+        }
+        imageRes != null -> {
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = namaIkan,
+                contentScale = ContentScale.Crop,
+                modifier = modifier
+            )
+        }
+        else -> {
+            Box(
+                modifier = modifier.background(OrderDesignTokens.MintAccent),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = namaIkan.take(1).uppercase(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OrderDesignTokens.MaritimeDark
+                )
+            }
         }
     }
 }
