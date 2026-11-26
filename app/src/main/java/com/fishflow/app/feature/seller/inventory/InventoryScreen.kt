@@ -15,17 +15,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowBottomBar
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
@@ -44,6 +45,7 @@ import com.fishflow.app.core.ui.components.SellerBottomBarItems
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.feature.seller.inventory.components.InventoryItemCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryScreen(
     onProductClick: (FishProduct) -> Unit,
@@ -53,6 +55,11 @@ fun InventoryScreen(
     viewModel: InventoryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    ErrorToastEffect(
+        errorMessage = uiState.errorMessage,
+        onConsumed = viewModel::clearError
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -71,43 +78,26 @@ fun InventoryScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = viewModel::onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            CoastalHeroHeader(
-                badgeText = "Manajemen Stok",
-                title = "Inventory Tangkapan",
-                subtitle = "Kelola ketersediaan stok dan harga ikan segar Anda.",
-                trailingContent = {
-                    IconButton(
-                        onClick = viewModel::onRefresh,
-                        enabled = !uiState.isRefreshing
-                    ) {
-                        if (uiState.isRefreshing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = OrderDesignTokens.MintAccent
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Rounded.Refresh,
-                                contentDescription = "Segarkan",
-                                tint = OrderDesignTokens.MintAccent
-                            )
-                        }
-                    }
-                }
-            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                CoastalHeroHeader(
+                    badgeText = "Manajemen Stok",
+                    title = "Inventory Tangkapan",
+                    subtitle = "Pantau stok dan status jual hasil tangkapan Anda."
+                )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = viewModel::onSearchQueryChange,
@@ -266,6 +256,7 @@ fun InventoryScreen(
                     }
                 }
             }
+        }
         }
     }
 }

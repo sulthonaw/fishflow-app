@@ -21,13 +21,12 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Landscape
 import androidx.compose.material.icons.rounded.LocalActivity
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,9 +42,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.AdminBottomBarItems
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
 import com.fishflow.app.core.ui.components.FishFlowBottomBar
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
     uiState: AdminDashboardUiState,
@@ -57,6 +58,8 @@ fun AdminDashboardScreen(
     onBack: (() -> Unit)? = null,
     onNavItemClick: ((String) -> Unit)? = null
 ) {
+    ErrorToastEffect(errorMessage = uiState.errorMessage)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
@@ -77,43 +80,30 @@ fun AdminDashboardScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
         ) {
-            CoastalHeroHeader(
-                badgeText = "Panel Pengelola",
-                title = "Dashboard Admin",
-                subtitle = "Kelola destinasi wisata, aktivitas pesisir, dan akun pengguna FishFlow.",
-                trailingContent = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            imageVector = Icons.Rounded.Refresh,
-                            contentDescription = "Muat ulang statistik",
-                            tint = OrderDesignTokens.MintAccent
-                        )
-                    }
-                }
-            )
-
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                if (uiState.isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = OrderDesignTokens.CoastalTeal)
-                    }
-                } else {
+                CoastalHeroHeader(
+                    badgeText = "Panel Pengelola",
+                    title = "Dashboard Admin",
+                    subtitle = "Kelola destinasi wisata, aktivitas pesisir, dan akun pengguna FishFlow."
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     if (uiState.errorMessage != null) {
                         Box(
                             modifier = Modifier
@@ -176,9 +166,9 @@ fun AdminDashboardScreen(
                         description = "Lihat daftar akun penjual dan wisatawan.",
                         onClick = onManageUsers
                     )
-                }
 
-                Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
     }

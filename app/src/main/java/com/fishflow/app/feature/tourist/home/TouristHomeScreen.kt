@@ -1,4 +1,4 @@
-﻿// TouristHomeScreen.kt
+// TouristHomeScreen.kt
 // Developer: Octavia
 //
 // Beranda utama wisatawan.
@@ -57,6 +57,7 @@ import com.fishflow.app.core.ui.components.LoadingIndicator
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.core.ui.components.TouristBottomBarItems
 import com.fishflow.app.core.ui.theme.FishFlowTheme
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.data.model.Destination
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.feature.tourist.home.components.CategoryChips
@@ -77,6 +78,8 @@ fun TouristHomeScreen(
     onNavItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ErrorToastEffect(errorMessage = uiState.errorMessage ?: uiState.destinationErrorMessage)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,

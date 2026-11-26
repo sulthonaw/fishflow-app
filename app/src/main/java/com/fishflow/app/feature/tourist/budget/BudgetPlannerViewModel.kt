@@ -1,10 +1,11 @@
-﻿package com.fishflow.app.feature.tourist.budget
+package com.fishflow.app.feature.tourist.budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.repository.DestinationRepositoryImpl
 import com.fishflow.app.domain.usecase.tourism.CalculateBudgetEstimateUseCase
 import com.fishflow.app.domain.usecase.tourism.GetActivitiesByDestinationUseCase
@@ -69,7 +70,7 @@ class BudgetPlannerViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Gagal memuat aktivitas destinasi"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal memuat aktivitas destinasi")
                         )
                     }
                 }
@@ -116,7 +117,7 @@ class BudgetPlannerViewModel(
                     destinationId = destinationId,
                     destinationName = destinationName,
                     getActivities = GetActivitiesByDestinationUseCase(
-                        DestinationRepositoryImpl.default()
+                        DestinationRepositoryImpl.supabase()
                     ),
                     calculateBudgetEstimate = CalculateBudgetEstimateUseCase(),
                     initialSelectedIds = initialSelectedIds

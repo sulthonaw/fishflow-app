@@ -155,11 +155,6 @@ fun ProfileScreen(
                             label = "Peran Aktif",
                             value = roleTitle
                         )
-                        ProfileDetailRow(
-                            icon = Icons.Rounded.VerifiedUser,
-                            label = "Mode Aplikasi",
-                            value = "Simulasi Alur Lokal (Tanpa DB)"
-                        )
                     }
                 }
 

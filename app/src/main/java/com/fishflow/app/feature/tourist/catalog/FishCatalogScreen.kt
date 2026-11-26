@@ -1,4 +1,4 @@
-﻿// FishCatalogScreen.kt
+// FishCatalogScreen.kt
 // Developer: Octavia
 //
 // Etalase/katalog ikan untuk wisatawan. Bisa dibuka tanpa login.
@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.EmptyStateView
 import com.fishflow.app.core.ui.components.ErrorMessage
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowBottomBar
 import com.fishflow.app.core.ui.components.FishFlowSearchBar
 import com.fishflow.app.core.ui.components.FishFlowTopBar
@@ -85,6 +86,8 @@ fun FishCatalogScreen(
     onBack: (() -> Unit)? = null,
     onNavItemClick: (String) -> Unit = {}
 ) {
+    ErrorToastEffect(errorMessage = uiState.errorMessage)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,

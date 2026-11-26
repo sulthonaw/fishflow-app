@@ -216,7 +216,6 @@ fun OrderSummaryCard(
                 OrderStatus.DIKONFIRMASI,
                 OrderStatus.SIAP_DIAMBIL -> {
                     SellerHandoverActionButtons(
-                        onScanQr = onScanQr,
                         onCompleteHandover = onCompleteHandover
                     )
 

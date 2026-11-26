@@ -10,6 +10,7 @@ package com.fishflow.app.data.repository
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.remote.InMemoryProductRemoteDataSource
 import com.fishflow.app.data.remote.ProductRemoteDataSource
+import com.fishflow.app.data.remote.SupabaseProductRemoteDataSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +19,7 @@ import kotlinx.coroutines.withContext
 
 class ProductRepositoryImpl(
     private val remote: ProductRemoteDataSource = InMemoryProductRemoteDataSource,
-    private val stockSource: ProductStockSource = InMemoryProductStockSource,
+    private val stockSource: ProductStockSource? = InMemoryProductStockSource,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ProductRepository {
 
@@ -82,7 +83,8 @@ class ProductRepositoryImpl(
 
     // Produk yang tidak punya data stok dianggap 0 sehingga tidak tampil di katalog.
     private suspend fun List<FishProduct>.withAvailableStock(): List<FishProduct> {
-        val stock = stockSource.getAvailableStock().getOrThrow()
+        val source = stockSource ?: return this
+        val stock = source.getAvailableStock().getOrThrow()
         return map { product -> product.copy(stokTersedia = stock[product.id] ?: 0.0) }
     }
 
@@ -99,5 +101,10 @@ class ProductRepositoryImpl(
 
     companion object {
         fun default(): ProductRepository = ProductRepositoryImpl()
+
+        fun supabase(): ProductRepository = ProductRepositoryImpl(
+            remote = SupabaseProductRemoteDataSource(),
+            stockSource = null
+        )
     }
 }

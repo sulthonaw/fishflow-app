@@ -40,11 +40,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,10 +76,18 @@ private enum class DetailActionDialog { CONFIRM, REJECT, COMPLETE }
 fun SellerOrderDetailScreen(
     modifier: Modifier = Modifier,
     initialOrder: Order = SellerOrderUiState.sampleSellerOrders().first(),
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onConfirmOrder: (String) -> Unit = {},
+    onRejectOrder: (String) -> Unit = {},
+    onCompleteOrder: (String, String) -> Unit = { _, _ -> }
 ) {
     var order by remember { mutableStateOf(initialOrder) }
+    LaunchedEffect(initialOrder) {
+        order = initialOrder
+    }
     var activeDialog by remember { mutableStateOf<DetailActionDialog?>(null) }
+    var pickupCodeInput by remember { mutableStateOf("") }
+    var pickupCodeError by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -351,7 +361,6 @@ fun SellerOrderDetailScreen(
                     OrderStatus.DIKONFIRMASI,
                     OrderStatus.SIAP_DIAMBIL -> {
                         SellerHandoverActionButtons(
-                            onScanQr = {},
                             onCompleteHandover = { activeDialog = DetailActionDialog.COMPLETE }
                         )
                     }
@@ -381,20 +390,63 @@ fun SellerOrderDetailScreen(
         }
 
         AlertDialog(
-            onDismissRequest = { activeDialog = null },
+            onDismissRequest = {
+                activeDialog = null
+                pickupCodeInput = ""
+                pickupCodeError = null
+            },
             title = { Text(text = title, fontWeight = FontWeight.Bold) },
-            text = { Text(text = message) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(text = message)
+                    if (dialogType == DetailActionDialog.COMPLETE) {
+                        OutlinedTextField(
+                            value = pickupCodeInput,
+                            onValueChange = {
+                                pickupCodeInput = it.uppercase()
+                                pickupCodeError = null
+                            },
+                            label = { Text("Kode Pickup Pembeli") },
+                            placeholder = { Text("Contoh: FF-8842") },
+                            singleLine = true,
+                            isError = pickupCodeError != null,
+                            supportingText = pickupCodeError?.let { err -> { Text(err) } },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
+                        when (dialogType) {
+                            DetailActionDialog.CONFIRM -> onConfirmOrder(order.id)
+                            DetailActionDialog.REJECT -> onRejectOrder(order.id)
+                            DetailActionDialog.COMPLETE -> {
+                                val entered = pickupCodeInput.trim()
+                                val expected = order.kodePickup?.trim()
+                                if (entered.isBlank()) {
+                                    pickupCodeError = "Masukkan kode pickup pembeli."
+                                    return@Button
+                                }
+                                if (!expected.isNullOrBlank() && !entered.equals(expected, ignoreCase = true)) {
+                                    pickupCodeError = "Kode pickup tidak cocok."
+                                    return@Button
+                                }
+                                onCompleteOrder(order.id, entered)
+                            }
+                        }
+
                         order = order.copy(
                             status = when (dialogType) {
-                                DetailActionDialog.CONFIRM -> OrderStatus.DIKONFIRMASI
+                                DetailActionDialog.CONFIRM -> OrderStatus.SIAP_DIAMBIL
                                 DetailActionDialog.REJECT -> OrderStatus.DITOLAK
                                 DetailActionDialog.COMPLETE -> OrderStatus.SELESAI
                             }
                         )
                         activeDialog = null
+                        pickupCodeInput = ""
+                        pickupCodeError = null
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (dialogType == DetailActionDialog.REJECT) {
@@ -408,7 +460,13 @@ fun SellerOrderDetailScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { activeDialog = null }) {
+                TextButton(
+                    onClick = {
+                        activeDialog = null
+                        pickupCodeInput = ""
+                        pickupCodeError = null
+                    }
+                ) {
                     Text("Batal")
                 }
             }

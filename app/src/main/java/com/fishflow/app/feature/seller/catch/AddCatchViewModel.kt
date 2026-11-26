@@ -1,15 +1,23 @@
-﻿
+
 package com.fishflow.app.feature.seller.`catch`
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
+import com.fishflow.app.data.model.FishCatch
+import com.fishflow.app.data.repository.AuthRepository
+import com.fishflow.app.data.repository.AuthRepositoryImpl
+import com.fishflow.app.data.repository.FishCatchRepository
+import com.fishflow.app.data.repository.FishCatchRepositoryImpl
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AddCatchViewModel : ViewModel() {
+class AddCatchViewModel(
+    private val authRepository: AuthRepository = AuthRepositoryImpl(),
+    private val fishCatchRepository: FishCatchRepository = FishCatchRepositoryImpl()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddCatchUiState())
     val uiState = _uiState.asStateFlow()
@@ -101,7 +109,21 @@ class AddCatchViewModel : ViewModel() {
             )
 
             try {
-                delay(1000)
+                val seller = authRepository.getCurrentUser()
+                    ?: error("Sesi penjual tidak ditemukan. Silakan login terlebih dahulu.")
+                val state = _uiState.value
+                val beratValue = state.berat.replace(",", ".").toDouble()
+
+                fishCatchRepository.recordCatch(
+                    FishCatch(
+                        id = "",
+                        sellerId = seller.id,
+                        namaIkan = state.jenisIkan.trim(),
+                        beratKg = beratValue,
+                        tanggalTangkap = state.tanggalTangkap.trim(),
+                        fotoUrl = state.fotoUri?.toString()
+                    )
+                ).getOrThrow()
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -116,8 +138,10 @@ class AddCatchViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isSaved = false,
-                    errorMessage = e.message
-                        ?: "Gagal menyimpan data tangkapan."
+                    errorMessage = ErrorMessageMapper.from(
+                        e,
+                        fallback = "Gagal menyimpan data tangkapan."
+                    )
                 )
             }
         }

@@ -1,8 +1,9 @@
-﻿
+
 package com.fishflow.app.feature.seller.inventory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.model.ProductStatus
 import com.fishflow.app.data.repository.ProductRepository
@@ -59,7 +60,7 @@ class ProductDetailViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Gagal mengambil detail produk."
+                    error = ErrorMessageMapper.from(e, "Gagal mengambil detail produk.")
                 )
             }
         }
@@ -98,7 +99,7 @@ class ProductDetailViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isUpdatingStatus = false,
-                    error = e.message ?: "Gagal memperbarui status produk."
+                    error = ErrorMessageMapper.from(e, "Gagal memperbarui status produk.")
                 )
             }
         }

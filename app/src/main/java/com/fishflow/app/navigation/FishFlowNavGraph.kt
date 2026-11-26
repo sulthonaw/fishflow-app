@@ -1,11 +1,15 @@
 package com.fishflow.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -14,14 +18,21 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.fishflow.app.R
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.data.model.FishProduct
 import com.fishflow.app.data.model.Order
 import com.fishflow.app.data.model.OrderItem
 import com.fishflow.app.data.model.OrderStatus
 import com.fishflow.app.data.model.ProductStatus
 import com.fishflow.app.data.model.UserRole
+import com.fishflow.app.data.repository.AuthRepositoryImpl
+import com.fishflow.app.feature.admin.ActivityFormScreen
+import com.fishflow.app.feature.admin.ActivityFormState
 import com.fishflow.app.feature.admin.AdminDashboardScreen
+import com.fishflow.app.feature.admin.DestinationFormScreen
+import com.fishflow.app.feature.admin.DestinationFormState
 import com.fishflow.app.feature.admin.ManageDestinationScreen
+import com.fishflow.app.feature.admin.ManageDestinationViewModel
 import com.fishflow.app.feature.admin.ManageUsersScreen
 import com.fishflow.app.feature.auth.LoginScreen
 import com.fishflow.app.feature.auth.ProfileScreen
@@ -32,23 +43,30 @@ import com.fishflow.app.feature.seller.inventory.InventoryScreen
 import com.fishflow.app.feature.seller.inventory.ProductDetailScreen
 import com.fishflow.app.feature.seller.inventory.UpdatePriceScreen
 import com.fishflow.app.feature.seller.orders.SellerOrderDetailScreen
+import com.fishflow.app.feature.seller.orders.SellerOrderDetailViewModel
 import com.fishflow.app.feature.seller.orders.SellerOrderListScreen
+import com.fishflow.app.feature.seller.orders.SellerOrderListViewModel
 import com.fishflow.app.feature.seller.orders.SellerOrderUiState
 import com.fishflow.app.feature.tourist.budget.BudgetPlannerScreen
 import com.fishflow.app.feature.tourist.cart.CartItem
 import com.fishflow.app.feature.tourist.cart.CartScreen
 import com.fishflow.app.feature.tourist.cart.CartUiState
+import com.fishflow.app.feature.tourist.cart.CartViewModel
 import com.fishflow.app.feature.tourist.catalog.FishCatalogScreen
 import com.fishflow.app.feature.tourist.catalog.FishDetailScreen
 import com.fishflow.app.feature.tourist.checkout.CheckoutScreen
 import com.fishflow.app.feature.tourist.checkout.CheckoutUiState
+import com.fishflow.app.feature.tourist.checkout.CheckoutViewModel
 import com.fishflow.app.feature.tourist.destination.DestinationDetailScreen
 import com.fishflow.app.feature.tourist.destination.DestinationListScreen
 import com.fishflow.app.feature.tourist.home.TouristHomeScreen
 import com.fishflow.app.feature.tourist.order_history.OrderHistoryScreen
+import com.fishflow.app.feature.tourist.order_history.OrderHistoryViewModel
 import com.fishflow.app.feature.tourist.order_history.OrderTrackingScreen
+import com.fishflow.app.feature.tourist.order_history.OrderTrackingViewModel
 import com.fishflow.app.feature.tourist.order_history.sampleTouristOrders
 import com.fishflow.app.feature.tourist.order_history.sampleTrackingOrder
+import kotlinx.coroutines.launch
 import java.net.URLDecoder
 
 private data class SessionUser(
@@ -62,10 +80,14 @@ fun FishFlowNavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController()
 ) {
+    val authRepository = remember { AuthRepositoryImpl() }
+    val coroutineScope = rememberCoroutineScope()
+    val cartViewModel: CartViewModel = viewModel()
+    val checkoutViewModel: CheckoutViewModel = viewModel()
+    val orderHistoryViewModel: OrderHistoryViewModel = viewModel()
+    val sellerOrderListViewModel: SellerOrderListViewModel = viewModel()
+
     var sessionUser by remember { mutableStateOf(SessionUser()) }
-    var cartState by remember { mutableStateOf(CartUiState()) }
-    var checkoutState by remember { mutableStateOf(CheckoutUiState()) }
-    var touristOrders by remember { mutableStateOf(sampleTouristOrders()) }
     var selectedSellerProduct by remember {
         mutableStateOf(
             FishProduct(
@@ -83,6 +105,9 @@ fun FishFlowNavGraph(
 
     val navigateAfterAuth: (UserRole, String, String) -> Unit = { role, name, email ->
         sessionUser = SessionUser(name = name, email = email, role = role)
+        cartViewModel.loadCart()
+        orderHistoryViewModel.refresh()
+        sellerOrderListViewModel.refresh()
         val targetGraph = when (role) {
             UserRole.WISATAWAN -> Screen.TouristGraph.route
             UserRole.PENJUAL -> Screen.SellerGraph.route
@@ -94,7 +119,16 @@ fun FishFlowNavGraph(
         }
     }
 
+    LaunchedEffect(Unit) {
+        authRepository.getCurrentUser()?.let { user ->
+            navigateAfterAuth(user.role, user.nama, user.email)
+        }
+    }
+
     val logoutToAuth: () -> Unit = {
+        coroutineScope.launch {
+            authRepository.logout()
+        }
         navController.navigate(Screen.AuthGraph.route) {
             popUpTo(navController.graph.id) { inclusive = true }
             launchSingleTop = true
@@ -234,17 +268,7 @@ fun FishFlowNavGraph(
                 FishDetailScreen(
                     productId = productId,
                     onAddToCart = { product, quantity ->
-                        val newItem = CartItem(
-                            productId = product.id,
-                            namaIkan = product.namaIkan,
-                            vesselName = product.namaKapal ?: product.namaPenjual,
-                            qty = quantity,
-                            hargaSatuan = product.hargaPerKg,
-                            availableStockKg = product.stokTersedia.toInt().coerceAtLeast(1),
-                            imageRes = product.imageRes ?: R.drawable.img_tuna_super
-                        )
-                        val existing = cartState.items.filterNot { it.productId == newItem.productId }
-                        cartState = cartState.copy(items = listOf(newItem) + existing)
+                        cartViewModel.onAddItem(product, quantity)
                         navController.navigate(Screen.Cart.route)
                     },
                     onBack = { navController.popBackStack() }
@@ -322,6 +346,7 @@ fun FishFlowNavGraph(
             }
 
             composable(Screen.Cart.route) {
+                val cartState by cartViewModel.uiState.collectAsStateWithLifecycle()
                 CartScreen(
                     initialState = cartState,
                     onBack = { navController.popBackStack() },
@@ -329,7 +354,6 @@ fun FishFlowNavGraph(
                         navController.navigate(Screen.FishCatalog.createRoute())
                     },
                     onProceedToCheckout = { updatedCart ->
-                        cartState = updatedCart
                         val orderItems = updatedCart.items.mapIndexed { idx, item ->
                             OrderItem(
                                 id = "oi-$idx-${item.productId}",
@@ -344,50 +368,46 @@ fun FishFlowNavGraph(
                                 imageRes = item.imageRes
                             )
                         }
-                        checkoutState = CheckoutUiState(
-                            buyerName = sessionUser.name,
-                            orderItems = orderItems.ifEmpty { CheckoutUiState.sampleOrderItems() }
-                        )
+                        checkoutViewModel.setOrderItems(orderItems)
                         navController.navigate(Screen.Checkout.route)
                     }
                 )
             }
 
             composable(Screen.Checkout.route) {
+                val checkoutState by checkoutViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = checkoutState.errorMessage,
+                    onConsumed = checkoutViewModel::clearError
+                )
+                LaunchedEffect(checkoutState.isOrderCreated, checkoutState.orderId) {
+                    val createdId = checkoutState.orderId
+                    if (checkoutState.isOrderCreated && !createdId.isNullOrBlank()) {
+                        checkoutViewModel.resetCreatedState()
+                        cartViewModel.loadCart()
+                        orderHistoryViewModel.refresh()
+                        navController.navigate(Screen.OrderTracking.createRoute(createdId)) {
+                            popUpTo(Screen.TouristHome.route) { inclusive = false }
+                        }
+                    }
+                }
                 CheckoutScreen(
                     initialState = checkoutState,
                     onBack = { navController.popBackStack() },
-                    onConfirmOrder = { confirmed ->
-                        val newOrderId = "ord-ff-${(100..999).random()}"
-                        val newOrder = Order(
-                            id = newOrderId,
-                            orderCode = "#FF-20261126-${(100..999).random()}",
-                            buyerId = "buyer-local",
-                            buyerName = confirmed.buyerName,
-                            buyerSegment = "WISATAWAN DOMESTIK",
-                            sellerId = "seller-joko",
-                            sellerName = "Pak Joko Widodo",
-                            vesselName = confirmed.primaryItem?.vesselName ?: "KM Samudera 02",
-                            pickupPoint = confirmed.pickupPoint,
-                            items = confirmed.orderItems,
-                            extraFee = confirmed.biayaTambahan,
-                            totalHarga = confirmed.totalHarga,
-                            status = OrderStatus.MENUNGGU_KONFIRMASI,
-                            kodePickup = "FF-${(1000..9999).random()}",
-                            createdAt = "Baru saja"
-                        )
-                        touristOrders = listOf(newOrder) + touristOrders
-                        cartState = CartUiState(items = emptyList())
-                        navController.navigate(Screen.OrderTracking.createRoute(newOrder.id)) {
-                            popUpTo(Screen.TouristHome.route) { inclusive = false }
-                        }
+                    onConfirmOrder = {
+                        checkoutViewModel.onConfirmOrder()
                     }
                 )
             }
 
             composable(Screen.OrderHistory.route) {
+                val historyState by orderHistoryViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = historyState.errorMessage,
+                    onConsumed = orderHistoryViewModel::clearError
+                )
                 OrderHistoryScreen(
-                    orders = touristOrders,
+                    orders = historyState.orders,
                     onOrderClick = { order ->
                         navController.navigate(Screen.OrderTracking.createRoute(order.id))
                     },
@@ -403,10 +423,18 @@ fun FishFlowNavGraph(
                     }
                 )
             ) { backStackEntry ->
-                val orderId = backStackEntry.arguments?.getString(Screen.OrderTracking.ARG_ORDER_ID)
-                val order = touristOrders.firstOrNull { it.id == orderId } ?: sampleTrackingOrder()
+                val orderId = backStackEntry.arguments?.getString(Screen.OrderTracking.ARG_ORDER_ID).orEmpty()
+                val trackingViewModel: OrderTrackingViewModel = viewModel()
+                val trackingState by trackingViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = trackingState.errorMessage,
+                    onConsumed = trackingViewModel::clearError
+                )
+                LaunchedEffect(orderId) {
+                    trackingViewModel.observeOrder(orderId)
+                }
                 OrderTrackingScreen(
-                    initialOrder = order,
+                    initialOrder = trackingState.order ?: sampleTrackingOrder(),
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -491,11 +519,20 @@ fun FishFlowNavGraph(
             }
 
             composable(Screen.SellerOrders.route) {
+                val sellerOrderState by sellerOrderListViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = sellerOrderState.errorMessage,
+                    onConsumed = sellerOrderListViewModel::clearError
+                )
                 SellerOrderListScreen(
+                    initialState = sellerOrderState,
                     onBack = { navController.popBackStack() },
                     onOrderClick = { order ->
                         navController.navigate(Screen.SellerOrderDetail.createRoute(order.id))
-                    }
+                    },
+                    onConfirmOrder = sellerOrderListViewModel::confirmOrder,
+                    onRejectOrder = sellerOrderListViewModel::rejectOrder,
+                    onCompleteOrder = sellerOrderListViewModel::completeOrder
                 )
             }
 
@@ -507,13 +544,22 @@ fun FishFlowNavGraph(
                     }
                 )
             ) { backStackEntry ->
-                val orderId = backStackEntry.arguments?.getString(Screen.SellerOrderDetail.ARG_ORDER_ID)
-                val order = SellerOrderUiState.sampleSellerOrders()
-                    .firstOrNull { it.id == orderId }
-                    ?: SellerOrderUiState.sampleSellerOrders().first()
+                val orderId = backStackEntry.arguments?.getString(Screen.SellerOrderDetail.ARG_ORDER_ID).orEmpty()
+                val detailViewModel: SellerOrderDetailViewModel = viewModel()
+                val detailState by detailViewModel.uiState.collectAsStateWithLifecycle()
+                ErrorToastEffect(
+                    errorMessage = detailState.errorMessage,
+                    onConsumed = detailViewModel::clearError
+                )
+                LaunchedEffect(orderId) {
+                    detailViewModel.observeOrder(orderId)
+                }
                 SellerOrderDetailScreen(
-                    initialOrder = order,
-                    onBack = { navController.popBackStack() }
+                    initialOrder = detailState.order ?: SellerOrderUiState.sampleSellerOrders().first(),
+                    onBack = { navController.popBackStack() },
+                    onConfirmOrder = detailViewModel::onConfirmOrder,
+                    onRejectOrder = detailViewModel::onRejectOrder,
+                    onCompleteOrder = detailViewModel::onCompleteOrder
                 )
             }
 
@@ -541,9 +587,79 @@ fun FishFlowNavGraph(
                 )
             }
 
-            composable(Screen.ManageDestinations.route) {
+            composable(Screen.ManageDestinations.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.AdminGraph.route)
+                }
+                val manageViewModel: ManageDestinationViewModel = viewModel(
+                    viewModelStoreOwner = parentEntry,
+                    factory = ManageDestinationViewModel.factory()
+                )
                 ManageDestinationScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onOpenDestinationForm = {
+                        navController.navigate(Screen.DestinationForm.route)
+                    },
+                    onOpenActivityForm = {
+                        navController.navigate(Screen.ActivityForm.route)
+                    },
+                    viewModel = manageViewModel
+                )
+            }
+
+            composable(Screen.DestinationForm.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.AdminGraph.route)
+                }
+                val manageViewModel: ManageDestinationViewModel = viewModel(
+                    viewModelStoreOwner = parentEntry,
+                    factory = ManageDestinationViewModel.factory()
+                )
+                val uiState by manageViewModel.uiState.collectAsStateWithLifecycle()
+                val form = uiState.destinationForm
+
+                LaunchedEffect(form) {
+                    if (form == null) {
+                        navController.popBackStack()
+                    }
+                }
+
+                DestinationFormScreen(
+                    form = form ?: DestinationFormState(),
+                    onFormChange = manageViewModel::onDestinationFormChange,
+                    onSave = manageViewModel::onSaveDestination,
+                    onCancel = {
+                        manageViewModel.onDismissDestinationForm()
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Screen.ActivityForm.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.AdminGraph.route)
+                }
+                val manageViewModel: ManageDestinationViewModel = viewModel(
+                    viewModelStoreOwner = parentEntry,
+                    factory = ManageDestinationViewModel.factory()
+                )
+                val uiState by manageViewModel.uiState.collectAsStateWithLifecycle()
+                val form = uiState.activityForm
+
+                LaunchedEffect(form) {
+                    if (form == null) {
+                        navController.popBackStack()
+                    }
+                }
+
+                ActivityFormScreen(
+                    form = form ?: ActivityFormState(),
+                    onFormChange = manageViewModel::onActivityFormChange,
+                    onSave = manageViewModel::onSaveActivity,
+                    onCancel = {
+                        manageViewModel.onDismissActivityForm()
+                        navController.popBackStack()
+                    }
                 )
             }
 

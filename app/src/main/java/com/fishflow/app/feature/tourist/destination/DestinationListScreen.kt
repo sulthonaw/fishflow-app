@@ -55,6 +55,8 @@ fun DestinationListScreen(
     onBack: (() -> Unit)? = null,
     onNavItemClick: ((String) -> Unit)? = null
 ) {
+    com.fishflow.app.core.ui.components.ErrorToastEffect(errorMessage = uiState.errorMessage)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
@@ -83,7 +85,7 @@ fun DestinationListScreen(
             CoastalHeroHeader(
                 badgeText = "Rencana Wisata Bahari",
                 title = "Destinasi Wisata",
-                subtitle = "Temukan pantai dan aktivitas pesisir untuk rencana liburanmu."
+                subtitle = "Pilih destinasi pantai dan rencanakan aktivitas liburan Anda."
             )
 
             Column(

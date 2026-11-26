@@ -1,10 +1,11 @@
-﻿package com.fishflow.app.feature.admin
+package com.fishflow.app.feature.admin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.Activity
 import com.fishflow.app.data.model.Destination
 import com.fishflow.app.data.repository.DestinationRepository
@@ -89,7 +90,7 @@ class ManageDestinationViewModel(
                         getActivities(destination.id).onSuccess { activities ->
                             activitiesMap[destination.id] = activities
                         }.onFailure { error ->
-                            partialError = error.message
+                            partialError = ErrorMessageMapper.from(error, "Gagal memuat sebagian aktivitas")
                         }
                     }
 
@@ -106,7 +107,7 @@ class ManageDestinationViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Gagal memuat destinasi"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal memuat destinasi")
                         )
                     }
                 }
@@ -219,7 +220,7 @@ class ManageDestinationViewModel(
                     _uiState.update {
                         it.copy(
                             destinationForm = form.copy(
-                                errorMessage = error.message ?: "Gagal menyimpan destinasi"
+                                errorMessage = ErrorMessageMapper.from(error, "Gagal menyimpan destinasi")
                             )
                         )
                     }
@@ -254,7 +255,7 @@ class ManageDestinationViewModel(
                     _uiState.update {
                         it.copy(
                             destinationPendingDelete = null,
-                            errorMessage = error.message ?: "Gagal menghapus destinasi"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal menghapus destinasi")
                         )
                     }
                 }
@@ -353,7 +354,7 @@ class ManageDestinationViewModel(
                     _uiState.update {
                         it.copy(
                             activityForm = form.copy(
-                                errorMessage = error.message ?: "Gagal menyimpan aktivitas"
+                                errorMessage = ErrorMessageMapper.from(error, "Gagal menyimpan aktivitas")
                             )
                         )
                     }
@@ -388,7 +389,7 @@ class ManageDestinationViewModel(
                     _uiState.update {
                         it.copy(
                             activityPendingDelete = null,
-                            errorMessage = error.message ?: "Gagal menghapus aktivitas"
+                            errorMessage = ErrorMessageMapper.from(error, "Gagal menghapus aktivitas")
                         )
                     }
                 }
@@ -422,7 +423,7 @@ class ManageDestinationViewModel(
     companion object {
         fun factory(): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = DestinationRepositoryImpl.default()
+                val repository = DestinationRepositoryImpl.supabase()
                 ManageDestinationViewModel(
                     getDestinations = GetDestinationsUseCase(repository),
                     getActivities = GetActivitiesByDestinationUseCase(repository),

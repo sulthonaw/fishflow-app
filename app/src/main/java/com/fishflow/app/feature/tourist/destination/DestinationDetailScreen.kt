@@ -62,6 +62,8 @@ fun DestinationDetailScreen(
     val destination = uiState.destination
     var selectedIds by remember(destination?.id) { mutableStateOf(initialSelectedIds) }
 
+    com.fishflow.app.core.ui.components.ErrorToastEffect(errorMessage = uiState.errorMessage)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,

@@ -38,18 +38,19 @@ import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.Handshake
 import androidx.compose.material.icons.rounded.NotificationsActive
-import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -82,10 +83,18 @@ fun SellerOrderListScreen(
     modifier: Modifier = Modifier,
     initialState: SellerOrderUiState = SellerOrderUiState(),
     onBack: () -> Unit = {},
-    onOrderClick: (Order) -> Unit = {}
+    onOrderClick: (Order) -> Unit = {},
+    onConfirmOrder: (String) -> Unit = {},
+    onRejectOrder: (String) -> Unit = {},
+    onCompleteOrder: (String, String) -> Unit = { _, _ -> }
 ) {
     var uiState by remember { mutableStateOf(initialState) }
+    LaunchedEffect(initialState) {
+        uiState = initialState
+    }
     var dialogOrder by remember { mutableStateOf<Pair<Order, PendingOrderAction>?>(null) }
+    var pickupCodeInput by remember { mutableStateOf("") }
+    var pickupCodeError by remember { mutableStateOf<String?>(null) }
 
     val incomingOrders = remember(uiState.orders, uiState.selectedFilter) {
         when (uiState.selectedFilter) {
@@ -179,7 +188,7 @@ fun SellerOrderListScreen(
             if (handoverOrders.isNotEmpty()) {
                 item {
                     SectionHeaderRow(
-                        icon = Icons.Rounded.QrCodeScanner,
+                        icon = Icons.Rounded.Handshake,
                         title = "Serah Terima di Dermaga",
                         badgeText = "Pembeli Tiba",
                         badgeBg = OrderDesignTokens.MintAccent,
@@ -258,12 +267,53 @@ fun SellerOrderListScreen(
         }
 
         AlertDialog(
-            onDismissRequest = { dialogOrder = null },
+            onDismissRequest = {
+                dialogOrder = null
+                pickupCodeInput = ""
+                pickupCodeError = null
+            },
             title = { Text(text = title, fontWeight = FontWeight.Bold) },
-            text = { Text(text = body) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(text = body)
+                    if (action == PendingOrderAction.COMPLETE) {
+                        OutlinedTextField(
+                            value = pickupCodeInput,
+                            onValueChange = {
+                                pickupCodeInput = it.uppercase()
+                                pickupCodeError = null
+                            },
+                            label = { Text("Kode Pickup Pembeli") },
+                            placeholder = { Text("Contoh: FF-8842") },
+                            singleLine = true,
+                            isError = pickupCodeError != null,
+                            supportingText = pickupCodeError?.let { err -> { Text(err) } },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
+                        if (action == PendingOrderAction.COMPLETE) {
+                            val entered = pickupCodeInput.trim()
+                            val expected = targetOrder.kodePickup?.trim()
+                            if (entered.isBlank()) {
+                                pickupCodeError = "Masukkan kode pickup pembeli."
+                                return@Button
+                            }
+                            if (!expected.isNullOrBlank() && !entered.equals(expected, ignoreCase = true)) {
+                                pickupCodeError = "Kode pickup tidak cocok."
+                                return@Button
+                            }
+                            onCompleteOrder(targetOrder.id, entered)
+                        } else if (action == PendingOrderAction.CONFIRM) {
+                            onConfirmOrder(targetOrder.id)
+                        } else {
+                            onRejectOrder(targetOrder.id)
+                        }
+
                         val updatedStatus = when (action) {
                             PendingOrderAction.CONFIRM -> OrderStatus.SIAP_DIAMBIL
                             PendingOrderAction.REJECT -> OrderStatus.DITOLAK
@@ -282,6 +332,8 @@ fun SellerOrderListScreen(
                             }
                         )
                         dialogOrder = null
+                        pickupCodeInput = ""
+                        pickupCodeError = null
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (action == PendingOrderAction.REJECT) {
@@ -295,7 +347,13 @@ fun SellerOrderListScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { dialogOrder = null }) {
+                TextButton(
+                    onClick = {
+                        dialogOrder = null
+                        pickupCodeInput = ""
+                        pickupCodeError = null
+                    }
+                ) {
                     Text("Batal")
                 }
             }

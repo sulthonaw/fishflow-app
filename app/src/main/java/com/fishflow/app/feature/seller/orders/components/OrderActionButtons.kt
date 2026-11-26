@@ -5,7 +5,6 @@
 package com.fishflow.app.feature.seller.orders.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Verified
@@ -107,64 +105,33 @@ fun OrderActionButtons(
 
 @Composable
 fun SellerHandoverActionButtons(
-    onScanQr: () -> Unit,
     onCompleteHandover: () -> Unit,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Button(
+        onClick = onCompleteHandover,
+        enabled = !isLoading,
+        shape = RoundedCornerShape(9999.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = OrderDesignTokens.CoastalTeal,
+            contentColor = Color.White
+        ),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
     ) {
-        Button(
-            onClick = onScanQr,
-            enabled = !isLoading,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = OrderDesignTokens.SurfaceContainer,
-                contentColor = OrderDesignTokens.TextPrimary
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.CameraAlt,
-                contentDescription = null,
-                modifier = Modifier.size(17.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Scan QR Pembeli / Input PIN",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Button(
-            onClick = onCompleteHandover,
-            enabled = !isLoading,
-            shape = RoundedCornerShape(9999.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = OrderDesignTokens.CoastalTeal,
-                contentColor = Color.White
-            ),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Verified,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Konfirmasi Serah Terima Selesai",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        Icon(
+            imageVector = Icons.Rounded.Verified,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Verifikasi Kode & Serah Terima",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }

@@ -1,22 +1,21 @@
-﻿
 package com.fishflow.app.data.remote
 
+import com.fishflow.app.core.network.SupabaseClientProvider
+import com.fishflow.app.supabase.SupabaseConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.storage.storage
-import io.github.jan.supabase.storage.upload
 import java.util.UUID
 
 class StorageRemoteDataSource(
-    private val supabase: SupabaseClient
+    private val supabase: SupabaseClient = SupabaseClientProvider.client
 ) {
 
     companion object {
-        private const val CATCH_BUCKET = "catch-photos"
-        private const val PRODUCT_BUCKET = "product-images"
+        private const val DEFAULT_BUCKET = SupabaseConfig.STORAGE_BUCKET
     }
 
     /**
-     * Upload foto hasil tangkapan nelayan.
+     * Upload foto hasil tangkapan nelayan ke bucket fishflow-media.
      */
     suspend fun uploadCatchPhoto(
         sellerId: String,
@@ -33,12 +32,9 @@ class StorageRemoteDataSource(
 
         val safeSellerId = sanitizeSegment(sellerId)
         val safeFileName = sanitizeFileName(fileName)
+        val filePath = "catches/$safeSellerId/${UUID.randomUUID()}_$safeFileName"
 
-        val filePath =
-            "$safeSellerId/${UUID.randomUUID()}_$safeFileName"
-
-        val bucket = supabase.storage.from(CATCH_BUCKET)
-
+        val bucket = supabase.storage.from(DEFAULT_BUCKET)
         bucket.upload(path = filePath, data = imageBytes) {
             upsert = false
         }
@@ -47,7 +43,7 @@ class StorageRemoteDataSource(
     }
 
     /**
-     * Upload gambar produk ikan.
+     * Upload gambar produk ikan ke bucket fishflow-media.
      */
     suspend fun uploadProductImage(
         productId: String,
@@ -62,12 +58,9 @@ class StorageRemoteDataSource(
         }
 
         val safeProductId = sanitizeSegment(productId)
+        val filePath = "products/$safeProductId/${UUID.randomUUID()}.jpg"
 
-        val filePath =
-            "$safeProductId/${UUID.randomUUID()}.jpg"
-
-        val bucket = supabase.storage.from(PRODUCT_BUCKET)
-
+        val bucket = supabase.storage.from(DEFAULT_BUCKET)
         bucket.upload(path = filePath, data = imageBytes) {
             upsert = false
         }
@@ -79,7 +72,7 @@ class StorageRemoteDataSource(
      * Mengambil URL publik sebuah gambar.
      */
     fun getPublicUrl(
-        bucket: String,
+        bucket: String = DEFAULT_BUCKET,
         path: String
     ): String {
         require(bucket.isNotBlank()) {
@@ -99,7 +92,7 @@ class StorageRemoteDataSource(
      * Menghapus foto dari Supabase Storage.
      */
     suspend fun deletePhoto(
-        bucket: String,
+        bucket: String = DEFAULT_BUCKET,
         path: String
     ) {
         require(bucket.isNotBlank()) {

@@ -1,10 +1,11 @@
-﻿package com.fishflow.app.feature.tourist.destination
+package com.fishflow.app.feature.tourist.destination
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.fishflow.app.core.util.ErrorMessageMapper
 import com.fishflow.app.data.model.Activity
 import com.fishflow.app.data.model.Destination
 import com.fishflow.app.data.repository.DestinationRepository
@@ -62,8 +63,10 @@ class DestinationDetailViewModel(
                                 it.copy(
                                     destination = destination,
                                     isLoading = false,
-                                    errorMessage = error.message
-                                        ?: "Gagal memuat aktivitas destinasi"
+                                    errorMessage = ErrorMessageMapper.from(
+                                        error,
+                                        "Gagal memuat aktivitas destinasi"
+                                    )
                                 )
                             }
                         }
@@ -73,7 +76,7 @@ class DestinationDetailViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Destinasi tidak ditemukan"
+                            errorMessage = ErrorMessageMapper.from(error, "Destinasi tidak ditemukan")
                         )
                     }
                 }
@@ -88,7 +91,7 @@ class DestinationDetailViewModel(
     companion object {
         fun factory(destinationId: String): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = DestinationRepositoryImpl.default()
+                val repository = DestinationRepositoryImpl.supabase()
                 DestinationDetailViewModel(
                     destinationId = destinationId,
                     repository = repository,

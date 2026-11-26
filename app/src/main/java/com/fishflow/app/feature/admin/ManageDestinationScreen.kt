@@ -18,13 +18,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fishflow.app.core.ui.components.AdminBottomBarItems
 import com.fishflow.app.core.ui.components.CoastalHeroHeader
 import com.fishflow.app.core.ui.components.FishFlowBottomBar
+import com.fishflow.app.core.ui.components.ErrorToastEffect
 import com.fishflow.app.core.ui.components.FishFlowTopBar
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.data.model.Activity
@@ -54,6 +55,7 @@ import com.fishflow.app.feature.tourist.budget.formatRupiah
 // UI: Daftar destinasi + tombol tambah. Klik item -> form edit.
 // Form: nama, wilayah, deskripsi, foto, aktivitas + biayanya.
 // Tombol hapus dengan konfirmasi.
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageDestinationScreen(
     uiState: ManageDestinationUiState,
@@ -77,8 +79,38 @@ fun ManageDestinationScreen(
     onDismissMessage: () -> Unit,
     onRefresh: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    useSeparateFormRoutes: Boolean = false
 ) {
+    ErrorToastEffect(
+        errorMessage = uiState.errorMessage,
+        onConsumed = onDismissMessage
+    )
+
+    if (!useSeparateFormRoutes) {
+        uiState.destinationForm?.let { form ->
+            DestinationFormScreen(
+                form = form,
+                onFormChange = onDestinationFormChange,
+                onSave = onSaveDestination,
+                onCancel = onDismissDestinationForm,
+                modifier = modifier
+            )
+            return
+        }
+
+        uiState.activityForm?.let { form ->
+            ActivityFormScreen(
+                form = form,
+                onFormChange = onActivityFormChange,
+                onSave = onSaveActivity,
+                onCancel = onDismissActivityForm,
+                modifier = modifier
+            )
+            return
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,
@@ -97,7 +129,7 @@ fun ManageDestinationScreen(
             CoastalHeroHeader(
                 badgeText = "Konten Wisata",
                 title = "Kelola Destinasi",
-                subtitle = "Tambah destinasi, atur aktivitas, dan perbarui komponen biaya."
+                subtitle = "Tambah destinasi dan atur daftar aktivitas wisata pantai."
             )
 
             Column(
@@ -105,23 +137,16 @@ fun ManageDestinationScreen(
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Button(
+                    onClick = onAddDestination,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9999.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = OrderDesignTokens.CoastalTeal,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(
-                        onClick = onAddDestination,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = OrderDesignTokens.CoastalTeal,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("Tambah Destinasi")
-                    }
-                    TextButton(onClick = onRefresh) {
-                        Text("Muat ulang", color = OrderDesignTokens.CoastalTeal)
-                    }
+                    Text("Tambah Destinasi", fontWeight = FontWeight.Bold)
                 }
 
                 uiState.successMessage?.let { message ->
@@ -141,80 +166,57 @@ fun ManageDestinationScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                when {
-                    uiState.isLoading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = OrderDesignTokens.CoastalTeal)
-                        }
-                    }
-
-                    uiState.destinations.isEmpty() -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "Belum ada destinasi",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = "Tambahkan destinasi pertama lewat tombol di atas.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(uiState.destinations, key = { it.id }) { destination ->
-                                DestinationAdminCard(
-                                    destination = destination,
-                                    activities = uiState.activitiesFor(destination.id),
-                                    expanded = destination.id in uiState.expandedDestinationIds,
-                                    onToggleExpanded = { onToggleExpanded(destination.id) },
-                                    onEdit = { onEditDestination(destination) },
-                                    onDelete = { onDeleteDestination(destination) },
-                                    onAddActivity = { onAddActivity(destination.id) },
-                                    onEditActivity = onEditActivity,
-                                    onDeleteActivity = onDeleteActivity
+                PullToRefreshBox(
+                    isRefreshing = uiState.isLoading,
+                    onRefresh = onRefresh,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    when {
+                        uiState.destinations.isEmpty() && !uiState.isLoading -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Belum ada destinasi",
+                                    style = MaterialTheme.typography.titleMedium
                                 )
+                                Text(
+                                    text = "Tambahkan destinasi pertama lewat tombol di atas.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(uiState.destinations, key = { it.id }) { destination ->
+                                    DestinationAdminCard(
+                                        destination = destination,
+                                        activities = uiState.activitiesFor(destination.id),
+                                        expanded = destination.id in uiState.expandedDestinationIds,
+                                        onToggleExpanded = { onToggleExpanded(destination.id) },
+                                        onEdit = { onEditDestination(destination) },
+                                        onDelete = { onDeleteDestination(destination) },
+                                        onAddActivity = { onAddActivity(destination.id) },
+                                        onEditActivity = onEditActivity,
+                                        onDeleteActivity = onDeleteActivity
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
-
-    uiState.destinationForm?.let { form ->
-        DestinationFormDialog(
-            form = form,
-            onFormChange = onDestinationFormChange,
-            onSave = onSaveDestination,
-            onDismiss = onDismissDestinationForm
-        )
-    }
-
-    uiState.activityForm?.let { form ->
-        ActivityFormDialog(
-            form = form,
-            onFormChange = onActivityFormChange,
-            onSave = onSaveActivity,
-            onDismiss = onDismissActivityForm
-        )
     }
 
     uiState.destinationPendingDelete?.let { destination ->
@@ -263,6 +265,8 @@ fun ManageDestinationScreen(
 fun ManageDestinationScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenDestinationForm: (() -> Unit)? = null,
+    onOpenActivityForm: (() -> Unit)? = null,
     viewModel: ManageDestinationViewModel = viewModel(
         factory = ManageDestinationViewModel.factory()
     )
@@ -270,14 +274,26 @@ fun ManageDestinationScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     ManageDestinationScreen(
         uiState = uiState,
-        onAddDestination = viewModel::onAddDestinationClick,
-        onEditDestination = viewModel::onEditDestinationClick,
+        onAddDestination = {
+            viewModel.onAddDestinationClick()
+            onOpenDestinationForm?.invoke()
+        },
+        onEditDestination = { destination ->
+            viewModel.onEditDestinationClick(destination)
+            onOpenDestinationForm?.invoke()
+        },
         onDeleteDestination = viewModel::onDeleteDestinationClick,
         onConfirmDeleteDestination = viewModel::onConfirmDeleteDestination,
         onDismissDeleteDestination = viewModel::onDismissDeleteDestination,
         onToggleExpanded = viewModel::onToggleExpanded,
-        onAddActivity = viewModel::onAddActivityClick,
-        onEditActivity = viewModel::onEditActivityClick,
+        onAddActivity = { destinationId ->
+            viewModel.onAddActivityClick(destinationId)
+            onOpenActivityForm?.invoke()
+        },
+        onEditActivity = { activity ->
+            viewModel.onEditActivityClick(activity)
+            onOpenActivityForm?.invoke()
+        },
         onDeleteActivity = viewModel::onDeleteActivityClick,
         onConfirmDeleteActivity = viewModel::onConfirmDeleteActivity,
         onDismissDeleteActivity = viewModel::onDismissDeleteActivity,
@@ -290,7 +306,8 @@ fun ManageDestinationScreen(
         onDismissMessage = viewModel::onMessageShown,
         onRefresh = viewModel::load,
         onBack = onBack,
-        modifier = modifier
+        modifier = modifier,
+        useSeparateFormRoutes = onOpenDestinationForm != null && onOpenActivityForm != null
     )
 }
 
@@ -418,168 +435,6 @@ private fun ActivityAdminRow(
             Text("Hapus")
         }
     }
-}
-
-@Composable
-private fun DestinationFormDialog(
-    form: DestinationFormState,
-    onFormChange: (DestinationFormState) -> Unit,
-    onSave: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(if (form.isEditing) "Edit Destinasi" else "Tambah Destinasi")
-        },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = form.nama,
-                    onValueChange = { onFormChange(form.copy(nama = it)) },
-                    label = { Text("Nama destinasi") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = form.wilayah,
-                    onValueChange = { onFormChange(form.copy(wilayah = it)) },
-                    label = { Text("Wilayah") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = form.deskripsi,
-                    onValueChange = { onFormChange(form.copy(deskripsi = it)) },
-                    label = { Text("Deskripsi") },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = form.fotoUrl,
-                    onValueChange = { onFormChange(form.copy(fotoUrl = it)) },
-                    label = { Text("URL foto (opsional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = form.latitude,
-                        onValueChange = { onFormChange(form.copy(latitude = it)) },
-                        label = { Text("Latitude") },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = form.longitude,
-                        onValueChange = { onFormChange(form.copy(longitude = it)) },
-                        label = { Text("Longitude") },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                form.errorMessage?.let { message ->
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onSave) {
-                Text("Simpan")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
-            }
-        }
-    )
-}
-
-@Composable
-private fun ActivityFormDialog(
-    form: ActivityFormState,
-    onFormChange: (ActivityFormState) -> Unit,
-    onSave: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(if (form.isEditing) "Edit Aktivitas" else "Tambah Aktivitas")
-        },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = form.nama,
-                    onValueChange = { onFormChange(form.copy(nama = it)) },
-                    label = { Text("Nama aktivitas") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = form.kategori,
-                    onValueChange = { onFormChange(form.copy(kategori = it)) },
-                    label = { Text("Kategori") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Biaya sudah tersedia",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Switch(
-                        checked = form.isAvailable,
-                        onCheckedChange = { onFormChange(form.copy(isAvailable = it)) }
-                    )
-                }
-                if (form.isAvailable) {
-                    OutlinedTextField(
-                        value = form.biaya,
-                        onValueChange = { onFormChange(form.copy(biaya = it)) },
-                        label = { Text("Biaya (Rp)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                } else {
-                    Text(
-                        text = "Aktivitas ini akan ditandai \"Belum tersedia\" dan tidak dihitung Rp0.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                form.errorMessage?.let { message ->
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onSave) {
-                Text("Simpan")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
-            }
-        }
-    )
 }
 
 @Composable
