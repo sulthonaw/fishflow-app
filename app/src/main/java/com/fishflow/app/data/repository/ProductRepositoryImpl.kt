@@ -84,6 +84,10 @@ class ProductRepositoryImpl(
         remote.createProduct(product, catchId)
     }
 
+    override suspend fun deleteProduct(productId: String) = withContext(ioDispatcher) {
+        remote.deleteProduct(productId)
+    }
+
     override fun observeProducts(): Flow<List<FishProduct>> {
         return remote.subscribeToProductChanges()
     }

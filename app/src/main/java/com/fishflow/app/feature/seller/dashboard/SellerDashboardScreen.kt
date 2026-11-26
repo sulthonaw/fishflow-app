@@ -1,6 +1,8 @@
 package com.fishflow.app.feature.seller.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,15 +10,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -28,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -179,86 +186,61 @@ fun SellerDashboardScreen(
                     )
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Surface(
+                    onClick = onInventoryClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    shadowElevation = 2.dp
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Text(
-                            text = "Inventory Saya",
-                            color = OrderDesignTokens.TextPrimary,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        TextButton(onClick = onInventoryClick) {
-                            Text(
-                                text = "Lihat Semua",
-                                color = OrderDesignTokens.CoastalTeal,
-                                fontWeight = FontWeight.SemiBold
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(OrderDesignTokens.CoastalTeal.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Inventory2,
+                                contentDescription = null,
+                                tint = OrderDesignTokens.CoastalTeal,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
-                    }
 
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
-                        shadowElevation = 2.dp
-                    ) {
-                        if (uiState.inventoryPreview.isEmpty()) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(text = "🐟", fontSize = 28.sp)
-                                Text(
-                                    text = "Belum ada produk inventory",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = OrderDesignTokens.TextPrimary
-                                )
-                                Text(
-                                    text = "Tambahkan tangkapan pertama kamu untuk mulai mengelola stok.",
-                                    fontSize = 13.sp,
-                                    color = OrderDesignTokens.TextSecondary
-                                )
-                                Button(
-                                    onClick = onTambahTangkapan,
-                                    shape = RoundedCornerShape(9999.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = OrderDesignTokens.CoastalTeal
-                                    )
-                                ) {
-                                    Text("Tambah Tangkapan")
-                                }
-                            }
-                        } else {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "${uiState.inventoryPreview.size} produk tersedia dalam preview.",
-                                    fontSize = 13.sp,
-                                    color = OrderDesignTokens.TextSecondary
-                                )
-                                TextButton(onClick = onInventoryClick) {
-                                    Text(
-                                        text = "Buka Inventory",
-                                        color = OrderDesignTokens.CoastalTeal,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Lihat Inventory",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = OrderDesignTokens.TextPrimary
+                            )
+                            Text(
+                                text = if (uiState.inventoryPreview.isEmpty()) {
+                                    "Belum ada tangkapan. Ketuk untuk mulai mengelola stok."
+                                } else {
+                                    "${uiState.inventoryPreview.size} produk tangkapan • ${uiState.stokAktifKg} kg stok aktif"
+                                },
+                                fontSize = 13.sp,
+                                color = OrderDesignTokens.TextSecondary
+                            )
                         }
+
+                        Icon(
+                            imageVector = Icons.Rounded.ChevronRight,
+                            contentDescription = "Buka Inventory",
+                            tint = OrderDesignTokens.CoastalTeal
+                        )
                     }
                 }
 

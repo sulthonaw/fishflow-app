@@ -59,6 +59,11 @@ interface ProductRepository {
         catchId: String? = null
     ): Result<FishProduct> = Result.failure(UnsupportedOperationException("createProduct belum diimplementasikan"))
 
+    // Menghapus produk tangkapan penjual
+    suspend fun deleteProduct(
+        productId: String
+    ) {}
+
     // Mengamati perubahan data produk
     fun observeProducts(): Flow<List<FishProduct>> = emptyFlow()
 }

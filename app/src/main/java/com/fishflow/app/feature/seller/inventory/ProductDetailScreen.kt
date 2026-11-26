@@ -1,5 +1,6 @@
 package com.fishflow.app.feature.seller.inventory
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,20 +11,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +61,7 @@ fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     ErrorToastEffect(
         errorMessage = uiState.error,
@@ -58,6 +70,43 @@ fun ProductDetailScreen(
 
     LaunchedEffect(product.id) {
         viewModel.loadProduct(product.id)
+    }
+
+    LaunchedEffect(uiState.isDeleted) {
+        if (uiState.isDeleted) {
+            onBack()
+        }
+    }
+
+    if (showDeleteDialog && uiState.product != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Hapus Tangkapan?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "Produk \"${uiState.product?.namaIkan}\" akan dihapus permanen dari inventory Anda. Lanjutkan?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteProduct()
+                    }
+                ) {
+                    Text(
+                        text = "Hapus",
+                        color = OrderDesignTokens.ErrorText,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -85,7 +134,7 @@ fun ProductDetailScreen(
                 }
             }
 
-            uiState.error != null -> {
+            uiState.product == null && uiState.error != null -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -228,9 +277,43 @@ fun ProductDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = OrderDesignTokens.TextPrimary
                                 )
-                                StockInfoRow("ID Produk", currentProduct.id)
-                                StockInfoRow("ID Seller", currentProduct.sellerId)
-                                StockInfoRow("Wilayah", currentProduct.wilayah)
+                                StockInfoRow("Kategori", currentProduct.kategori.label)
+                                StockInfoRow("Wilayah", currentProduct.wilayah.ifBlank { "-" })
+                                StockInfoRow(
+                                    "Lokasi Pengambilan",
+                                    currentProduct.lokasiPengambilan.ifBlank { "-" }
+                                )
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = { showDeleteDialog = true },
+                            enabled = !uiState.isDeleting && !uiState.isUpdatingStatus,
+                            shape = RoundedCornerShape(9999.dp),
+                            border = BorderStroke(1.dp, OrderDesignTokens.ErrorText),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = OrderDesignTokens.ErrorText
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            if (uiState.isDeleting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    color = OrderDesignTokens.ErrorText,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Menghapus...", fontWeight = FontWeight.Bold)
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Rounded.DeleteOutline,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Hapus Tangkapan", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
