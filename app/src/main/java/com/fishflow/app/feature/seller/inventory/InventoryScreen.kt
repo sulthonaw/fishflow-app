@@ -61,6 +61,10 @@ fun InventoryScreen(
         onConsumed = viewModel::clearError
     )
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadInventory()
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = OrderDesignTokens.CanvasBg,

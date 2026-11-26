@@ -43,9 +43,10 @@ class CheckoutViewModel(
         }
     }
 
-    fun onConfirmOrder() {
+    fun onConfirmOrder(itemsOverride: List<OrderItem>? = null) {
         val current = _uiState.value
-        if (current.isProcessing || current.orderItems.isEmpty()) return
+        val itemsToOrder = itemsOverride?.takeIf { it.isNotEmpty() } ?: current.orderItems
+        if (current.isProcessing || itemsToOrder.isEmpty()) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, errorMessage = null) }
@@ -60,7 +61,7 @@ class CheckoutViewModel(
                 return@launch
             }
 
-            val firstProductId = current.orderItems.first().productId
+            val firstProductId = itemsToOrder.first().productId
             val product = runCatching { productRepository.getProductById(firstProductId) }.getOrNull()
             val sellerId = product?.sellerId
             if (sellerId.isNullOrBlank()) {
@@ -78,7 +79,7 @@ class CheckoutViewModel(
                 sellerId = sellerId,
                 pickupPoint = current.pickupPoint,
                 extraFee = current.biayaTambahan,
-                items = current.orderItems
+                items = itemsToOrder
             ).onSuccess { createdOrderId ->
                 _uiState.update {
                     it.copy(

@@ -129,6 +129,9 @@ fun FishFlowNavGraph(
     val logoutToAuth: () -> Unit = {
         coroutineScope.launch {
             authRepository.logout()
+            cartViewModel.loadCart()
+            orderHistoryViewModel.refresh()
+            sellerOrderListViewModel.refresh()
         }
         navController.navigate(Screen.AuthGraph.route) {
             popUpTo(navController.graph.id) { inclusive = true }
@@ -401,14 +404,17 @@ fun FishFlowNavGraph(
                 CheckoutScreen(
                     initialState = checkoutState,
                     onBack = { navController.popBackStack() },
-                    onConfirmOrder = {
-                        checkoutViewModel.onConfirmOrder()
+                    onConfirmOrder = { confirmed ->
+                        checkoutViewModel.onConfirmOrder(confirmed.orderItems)
                     }
                 )
             }
 
             composable(Screen.OrderHistory.route) {
                 val historyState by orderHistoryViewModel.uiState.collectAsStateWithLifecycle()
+                LaunchedEffect(Unit) {
+                    orderHistoryViewModel.refresh()
+                }
                 ErrorToastEffect(
                     errorMessage = historyState.errorMessage,
                     onConsumed = orderHistoryViewModel::clearError
