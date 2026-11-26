@@ -92,6 +92,7 @@ fun LoginScreen(
         uiState = uiState,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
+        onSelectDevRole = viewModel::loginWithDevelopmentAccount,
         onLoginClick = viewModel::onLoginClick,
         onRegisterClick = onRegisterClick,
         modifier = modifier
@@ -103,6 +104,7 @@ private fun LoginContent(
     uiState: LoginUiState,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onSelectDevRole: (UserRole) -> Unit,
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -293,6 +295,38 @@ private fun LoginContent(
                             Text("Masuk", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Untuk Development Account",
+                            color = OrderDesignTokens.TextMuted,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            DevRoleChip(
+                                label = "Wisatawan",
+                                enabled = !uiState.isLoading,
+                                onClick = { onSelectDevRole(UserRole.WISATAWAN) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            DevRoleChip(
+                                label = "Penjual",
+                                enabled = !uiState.isLoading,
+                                onClick = { onSelectDevRole(UserRole.PENJUAL) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            DevRoleChip(
+                                label = "Admin",
+                                enabled = !uiState.isLoading,
+                                onClick = { onSelectDevRole(UserRole.ADMIN) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -319,6 +353,30 @@ private fun LoginContent(
     }
 }
 
+@Composable
+private fun DevRoleChip(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(OrderDesignTokens.MintAccent.copy(alpha = 0.35f))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = OrderDesignTokens.CoastalTealDark,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
@@ -327,6 +385,7 @@ private fun LoginScreenPreview() {
             uiState = LoginUiState(),
             onEmailChange = {},
             onPasswordChange = {},
+            onSelectDevRole = {},
             onLoginClick = {},
             onRegisterClick = {}
         )
