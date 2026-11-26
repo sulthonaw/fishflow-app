@@ -2,22 +2,55 @@
 
 object ValidationUtils {
     private const val EPSILON = 0.000001
-    private val emailPattern = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+    private val emailPattern = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
     private val rupiahPattern = Regex("^(\\d+|\\d{1,3}(\\.\\d{3})+)$")
 
-    fun validateEmail(email: String): String? {
-        val value = email.trim()
-        if (value.isEmpty()) return "Email wajib diisi."
-        if (!emailPattern.matches(value)) return "Format email tidak valid."
-        return null
+    fun validateName(name: String): String? {
+        return if (name.trim().isEmpty()) {
+            "Nama tidak boleh kosong."
+        } else {
+            null
+        }
     }
 
-    fun validatePassword(password: String): String? {
-        if (password.isEmpty()) return "Password wajib diisi."
-        if (password.length < Constants.MIN_PASSWORD_LENGTH) {
-            return "Password minimal ${Constants.MIN_PASSWORD_LENGTH} karakter."
+    fun validateEmail(email: String): String? {
+        val trimmedEmail = email.trim()
+        if (trimmedEmail.isEmpty()) {
+            return "Email tidak boleh kosong."
         }
-        return null
+        return if (!emailPattern.matches(trimmedEmail)) {
+            "Format email tidak valid."
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Password minimal 8 karakter.
+     */
+    fun validatePassword(password: String): String? {
+        return when {
+            password.isEmpty() ->
+                "Password tidak boleh kosong."
+            password.length < Constants.MIN_PASSWORD_LENGTH ->
+                "Password minimal ${Constants.MIN_PASSWORD_LENGTH} karakter."
+            else ->
+                null
+        }
+    }
+
+    fun validateConfirmPassword(
+        password: String,
+        confirmPassword: String
+    ): String? {
+        return when {
+            confirmPassword.isEmpty() ->
+                "Konfirmasi password tidak boleh kosong."
+            password != confirmPassword ->
+                "Password dan konfirmasi password tidak sama."
+            else ->
+                null
+        }
     }
 
     fun validateWeight(weightText: String): String? {

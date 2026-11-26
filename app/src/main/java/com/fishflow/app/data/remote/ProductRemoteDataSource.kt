@@ -1,4 +1,4 @@
-﻿// ProductRemoteDataSource.kt
+// ProductRemoteDataSource.kt
 // Developer: Octavia & Fakhri
 //
 // Akses ke tabel "products" di Supabase.

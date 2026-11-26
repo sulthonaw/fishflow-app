@@ -29,11 +29,15 @@ data class FishProduct(
     val stokTeralokasi: Double = 0.0,
     val batasPengambilan: String? = null,
     val infoPenanganan: String? = null,
-    @param:DrawableRes val imageRes: Int? = null
+    @param:DrawableRes val imageRes: Int? = null,
+    val fotoUrl: String? = null,
+    val createdAt: String = ""
 ) {
-    // Menghitung stok yang masih dapat dipesan
     val stokRiil: Double
         get() = (stokTersedia - stokTeralokasi).coerceAtLeast(0.0)
+
+    val isStatusActive: Boolean
+        get() = status == ProductStatus.AKTIF
 
     // Syarat tampil di katalog: produk aktif dan masih ada stok yang bisa dipesan.
     val isAvailable: Boolean
