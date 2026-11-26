@@ -3,11 +3,6 @@
 // Baris chip filter kategori ikan. Stateless.
 package com.fishflow.app.feature.tourist.catalog.components
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -16,8 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fishflow.app.core.ui.components.HorizontalChipRow
 import com.fishflow.app.core.ui.components.OrderDesignTokens
 import com.fishflow.app.data.model.FishCategory
 
@@ -28,12 +23,7 @@ fun CategoryFilterChips(
     onSelect: (FishCategory?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    HorizontalChipRow(modifier = modifier) {
         CategoryChip(
             text = "Semua Kategori",
             isSelected = selectedCategory == null,

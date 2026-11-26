@@ -50,6 +50,7 @@ import com.fishflow.app.feature.tourist.cart.CartScreen
 import com.fishflow.app.feature.tourist.catalog.CatalogDemoHost
 import com.fishflow.app.feature.tourist.checkout.CheckoutScreen
 import com.fishflow.app.feature.tourist.destination.TourismDemoHost
+import com.fishflow.app.feature.tourist.home.TouristHomeDemoHost
 import com.fishflow.app.feature.tourist.order_history.OrderHistoryScreen
 import com.fishflow.app.feature.tourist.order_history.OrderTrackingScreen
 import com.fishflow.app.feature.tourist.order_history.sampleTrackingOrder
@@ -82,6 +83,7 @@ private fun FishFlowSulthonShowcase() {
     var route by remember { mutableStateOf<LauncherRoute>(LauncherRoute.Menu) }
     // Terpisah dari route karena harus bertahan saat rotasi (state filter katalog).
     var isCatalogOpen by rememberSaveable { mutableStateOf(false) }
+    var isHomeOpen by rememberSaveable { mutableStateOf(false) }
 
     if (isCatalogOpen) {
         CatalogDemoHost(
@@ -98,6 +100,22 @@ private fun FishFlowSulthonShowcase() {
                         "Pesanan" -> LauncherRoute.OrderHistory
                         else -> LauncherRoute.Menu
                     }
+                }
+            }
+        )
+        return
+    }
+
+    // Beranda tetap terbuka di balik layar lain, jadi kembali dari layar itu menuju beranda.
+    if (isHomeOpen && route == LauncherRoute.Menu) {
+        TouristHomeDemoHost(
+            onExit = { isHomeOpen = false },
+            onProceedToCheckout = { route = LauncherRoute.Checkout },
+            onNavItemClick = { tab ->
+                when (tab) {
+                    "Rencana" -> route = LauncherRoute.TourismDemo
+                    "Pesanan" -> route = LauncherRoute.OrderHistory
+                    "Profil" -> isHomeOpen = false
                 }
             }
         )
@@ -179,6 +197,13 @@ private fun FishFlowSulthonShowcase() {
                     contentColor = OrderDesignTokens.TextPrimary
                 ) {
                     route = LauncherRoute.TourismDemo
+                }
+                LauncherButton(
+                    label = "Beranda Wisatawan (F4)",
+                    containerColor = OrderDesignTokens.SurfaceContainer,
+                    contentColor = OrderDesignTokens.TextPrimary
+                ) {
+                    isHomeOpen = true
                 }
                 LauncherButton(
                     label = "Katalog Ikan (F4)",

@@ -4,14 +4,17 @@
 // State untuk katalog ikan.
 // - products: hasil akhir setelah semua filter, ini yang ditampilkan di layar
 // - regions: pilihan wilayah dari data destinasi Fungsi 3
+// - matchedDestinations: destinasi yang cocok dengan pencarian dari beranda
 // - selectedRegion / selectedCategory: null berarti semua
 package com.fishflow.app.feature.tourist.catalog
 
+import com.fishflow.app.data.model.Destination
 import com.fishflow.app.data.model.FishCategory
 import com.fishflow.app.data.model.FishProduct
 
 data class FishCatalogUiState(
     val products: List<FishProduct> = emptyList(),
+    val matchedDestinations: List<Destination> = emptyList(),
     val regions: List<String> = emptyList(),
     val categories: List<FishCategory> = FishCategory.entries,
     val selectedRegion: String? = null,

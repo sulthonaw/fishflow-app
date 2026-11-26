@@ -88,6 +88,24 @@ class FilterCatalogProductsUseCaseTest {
     }
 
     @Test
+    fun `kata kunci juga mencocokkan wilayah`() {
+        val products = listOf(
+            product("tuna", wilayah = "Tambakrejo"),
+            product("cumi", wilayah = "Serang")
+        )
+
+        assertEquals(
+            listOf("cumi"),
+            filterProducts(products, CatalogFilter(query = "serang")).map { it.id }
+        )
+        assertEquals(
+            listOf("cumi"),
+            filterProducts(products, CatalogFilter(query = "Pantai Serang")).map { it.id }
+        )
+        assertTrue(filterProducts(products, CatalogFilter(query = "pantai")).isEmpty())
+    }
+
+    @Test
     fun `hasil kosong saat tidak ada yang cocok`() {
         val products = listOf(product("tuna", wilayah = "Tambakrejo"))
 
