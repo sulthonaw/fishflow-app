@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -139,6 +140,25 @@ fun FishFlowNavGraph(
         }
     }
 
+    val navigateBottomTab: (String, String) -> Unit = { targetRoute, startRoute ->
+        if (targetRoute == startRoute) {
+            if (!navController.popBackStack(startRoute, inclusive = false)) {
+                navController.navigate(startRoute) {
+                    launchSingleTop = true
+                }
+            }
+        } else {
+            navController.navigate(targetRoute) {
+                popUpTo(startRoute) {
+                    saveState = true
+                    inclusive = false
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     val onTouristBottomNav: (String) -> Unit = { tab ->
         val targetRoute = when (tab) {
             "Home" -> Screen.TouristHome.route
@@ -148,11 +168,7 @@ fun FishFlowNavGraph(
             "Profil" -> Screen.TouristProfile.route
             else -> Screen.TouristHome.route
         }
-        navController.navigate(targetRoute) {
-            popUpTo(Screen.TouristHome.route) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+        navigateBottomTab(targetRoute, Screen.TouristHome.route)
     }
 
     val onSellerBottomNav: (String) -> Unit = { tab ->
@@ -162,11 +178,7 @@ fun FishFlowNavGraph(
             "Profil" -> Screen.SellerProfile.route
             else -> Screen.SellerDashboard.route
         }
-        navController.navigate(targetRoute) {
-            popUpTo(Screen.SellerDashboard.route) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+        navigateBottomTab(targetRoute, Screen.SellerDashboard.route)
     }
 
     val onAdminBottomNav: (String) -> Unit = { tab ->
@@ -175,11 +187,7 @@ fun FishFlowNavGraph(
             "Profil" -> Screen.AdminProfile.route
             else -> Screen.AdminDashboard.route
         }
-        navController.navigate(targetRoute) {
-            popUpTo(Screen.AdminDashboard.route) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+        navigateBottomTab(targetRoute, Screen.AdminDashboard.route)
     }
 
     NavHost(
@@ -462,6 +470,21 @@ fun FishFlowNavGraph(
                         onCancelOrder = trackingViewModel::cancelOrder,
                         onBack = { navController.popBackStack() }
                     )
+                } else {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        androidx.compose.foundation.layout.Column(
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                        ) {
+                            androidx.compose.material3.Text("Pesanan tidak ditemukan.")
+                            androidx.compose.material3.Button(onClick = { navController.popBackStack() }) {
+                                androidx.compose.material3.Text("Kembali")
+                            }
+                        }
+                    }
                 }
             }
 
@@ -483,8 +506,8 @@ fun FishFlowNavGraph(
             composable(Screen.SellerDashboard.route) {
                 SellerDashboardScreen(
                     onTambahTangkapan = { navController.navigate(Screen.AddCatch.route) },
-                    onPerbaruiHarga = { navController.navigate(Screen.Inventory.route) },
-                    onInventoryClick = { navController.navigate(Screen.Inventory.route) },
+                    onPerbaruiHarga = { onSellerBottomNav("Stok") },
+                    onInventoryClick = { onSellerBottomNav("Stok") },
                     onPesananClick = { navController.navigate(Screen.SellerOrders.route) },
                     onNavItemClick = onSellerBottomNav
                 )
@@ -492,11 +515,7 @@ fun FishFlowNavGraph(
 
             composable(Screen.AddCatch.route) {
                 AddCatchScreen(
-                    onSaveSuccess = {
-                        navController.navigate(Screen.Inventory.route) {
-                            popUpTo(Screen.SellerDashboard.route) { inclusive = false }
-                        }
-                    },
+                    onSaveSuccess = { onSellerBottomNav("Stok") },
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -596,6 +615,21 @@ fun FishFlowNavGraph(
                         onRejectOrder = detailViewModel::onRejectOrder,
                         onCompleteOrder = detailViewModel::onCompleteOrder
                     )
+                } else {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        androidx.compose.foundation.layout.Column(
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                        ) {
+                            androidx.compose.material3.Text("Pesanan tidak ditemukan.")
+                            androidx.compose.material3.Button(onClick = { navController.popBackStack() }) {
+                                androidx.compose.material3.Text("Kembali")
+                            }
+                        }
+                    }
                 }
             }
 
